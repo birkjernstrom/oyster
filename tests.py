@@ -17,7 +17,7 @@ class TestCase(unittest.TestCase):
         command = "grep -r 'foo' /some/file"
         tokens = sheldon.tokenize(command)
         self.assertTrue(isinstance(tokens, list))
-        self.assertTrue(len(tokens) == 4)
+        self.assertEqual(len(tokens), 4)
 
     def test_is_comment(self):
         comments = [
@@ -51,10 +51,10 @@ class TestCase(unittest.TestCase):
     def test_simple_command(self):
         command = sheldon.parse('cat -nb --fake=yes /foo/bar')
         self.assertTrue(command.program == 'cat')
-        self.assertTrue(len(command.arguments) == 3)
+        self.assertEqual(len(command.arguments), 3)
         self.assertTrue(command.has_option('-n'))
         self.assertTrue(command.has_option('-b'))
-        self.assertTrue(command.get_option('--fake') == 'yes')
+        self.assertEqual(command.get_option('--fake'), 'yes')
 
 if __name__ == '__main__':
     unittest.main()
