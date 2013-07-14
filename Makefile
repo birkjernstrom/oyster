@@ -4,7 +4,7 @@ all:
 	clean-pyc test
 
 test:
-	python tests/run.py
+	python tests.py
 
 
 clean-pyc:
