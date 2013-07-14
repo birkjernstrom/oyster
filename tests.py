@@ -49,12 +49,14 @@ class TestCase(unittest.TestCase):
         self.assertFalse(sheldon.is_script(command))
 
     def test_simple_command(self):
-        command = sheldon.parse('cat -nb --fake=yes /foo/bar')
+        command_str = 'cat -nb --fake=yes /foo/bar'
+        command = sheldon.parse(command_str)
         self.assertTrue(command.program == 'cat')
         self.assertEqual(len(command.arguments), 3)
         self.assertTrue(command.has_option('-n'))
         self.assertTrue(command.has_option('-b'))
         self.assertEqual(command.get_option('--fake'), 'yes')
+        self.assertEqual(str(command), command_str)
 
 if __name__ == '__main__':
     unittest.main()
