@@ -17,7 +17,6 @@ RESERVED_WORDS = frozenset([
 
 class Command(object):
     def __init__(self, program, arguments):
-        self.options = {}
         self.program = program
         self.arguments = tuple(arguments)
 
@@ -26,13 +25,22 @@ class Command(object):
         self.tokens = tuple(tokens)
 
         self.as_string = ' '.join(self.tokens)
-        self._parse_options()
+        self._options = self._parse_options(arguments)
+
+    def get_options(self):
+        """Retrieve a copy of the command options."""
+        # Changes to the options dict will not propagate to the
+        # tokens, arguments or string representation of the command.
+        # Therefore, the options are intended to be read-only which this
+        # API hopefully makes clear by making the attribute "private" and
+        # the accessor return a copy of the dict.
+        return self._options.copy()
 
     def has_option(self, name):
-        return name in self.options
+        return name in self._options
 
     def get_option_values(self, name, *args):
-        return self.options.get(name, *args)
+        return self._options.get(name, *args)
 
     def get_option_count(self, name):
         values = self.get_option_values(name)
@@ -43,7 +51,7 @@ class Command(object):
     def __str__(self):
         return self.as_string
 
-    def _parse_options(self):
+    def _parse_options(self, arguments):
         def sanitize_value(value):
             if not hasattr(value, 'isalpha'):
                 return value
@@ -60,12 +68,12 @@ class Command(object):
             return True
 
         options = {}
-        for index, token in enumerate(self.arguments):
+        for index, token in enumerate(arguments):
             if not token.startswith('-'):
                 continue
 
             try:
-                next_token = self.arguments[index + 1]
+                next_token = arguments[index + 1]
             except IndexError:
                 next_token = None
 
@@ -82,7 +90,7 @@ class Command(object):
                     value = get_value(next_token)
                     options.setdefault('-' + key, []).append(value)
 
-        self.options = options
+        return options
 
 def tokenize(string):
     return shlex.split(string, posix=True)
