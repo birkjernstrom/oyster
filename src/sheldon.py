@@ -20,8 +20,8 @@ class Command(object):
         self.program = program
         self.arguments = tuple(arguments)
 
-        tokens = [self.program]
-        tokens.extend(self.arguments)
+        tokens = list(arguments[:])
+        tokens.insert(0, program)
         self.tokens = tuple(tokens)
 
         self.as_string = ' '.join(self.tokens)
