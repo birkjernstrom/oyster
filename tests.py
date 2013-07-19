@@ -11,13 +11,20 @@ sys.path.insert(0, test_directory)
 
 import sheldon
 
-class TestCase(unittest.TestCase):
-    def test_tokenize(self):
-        # Only limited testing required since shlex handles the dirty work
-        command = "grep -r 'foo' /some/file"
-        tokens = sheldon.tokenize(command)
-        self.assertTrue(isinstance(tokens, list))
-        self.assertEqual(len(tokens), 4)
+
+class TestAPI(unittest.TestCase):
+    def setUp(self):
+        self.command_string = 'pip install -U -vvv -r requirements.txt'
+        self.command = sheldon.parse(self.command_string)
+
+    def test_parse(self):
+        command_string = 'cat foo.txt'
+        command = sheldon.parse(command_string)
+        self.assertTrue(isinstance(command, sheldon.Command))
+        self.assertEqual(command.program, 'cat')
+        self.assertEqual(command.arguments, ('foo.txt',))
+        self.assertEqual(command.tokens, ('cat', 'foo.txt'))
+        self.assertEqual(command.as_string, command_string)
 
     def test_is_comment(self):
         comments = [
@@ -47,6 +54,47 @@ class TestCase(unittest.TestCase):
 
         command = 'cat /foo/bar'
         self.assertFalse(sheldon.is_script(command))
+
+    def test_get_options(self):
+        options = self.command.get_options()
+        self.assertEqual(sorted(options.keys()), sorted([
+            '-U', '-v', '-r',
+        ]))
+        second_copy = self.command.get_options()
+        self.assertEqual(options, second_copy)
+        self.assertTrue(id(options) != id(second_copy))
+
+    def test_has_options(self):
+        self.assertTrue(self.command.has_option('-U'))
+        self.assertTrue(self.command.has_option('-v'))
+        self.assertTrue(self.command.has_option('-r'))
+
+    def test_get_option_values(self):
+        values = self.command.get_option_values('-U')
+        self.assertEqual(values, [True])
+
+        values = self.command.get_option_values('-v')
+        self.assertEqual(values, [True, True, True])
+
+        values = self.command.get_option_values('-r')
+        self.assertEqual(values, ['requirements.txt'])
+
+    def test_get_option_count(self):
+        self.assertEqual(self.command.get_option_count('-U'), 1)
+        self.assertEqual(self.command.get_option_count('-v'), 3)
+        self.assertEqual(self.command.get_option_count('-r'), 1)
+
+    def test_string_representation(self):
+        as_string = str(self.command)
+        self.assertEqual(self.command_string, as_string)
+
+class TestSimpleCommand(unittest.TestCase):
+    def test_tokenize(self):
+        # Only limited testing required since shlex handles the dirty work
+        command = "grep -r 'foo' /some/file"
+        tokens = sheldon.tokenize(command)
+        self.assertTrue(isinstance(tokens, list))
+        self.assertEqual(len(tokens), 4)
 
     def test_simple_command(self):
         command_str = 'cat -nb --fake=yes /foo/bar'
