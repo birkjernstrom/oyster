@@ -31,25 +31,57 @@ class Command(object):
     def has_option(self, name):
         return name in self.options
 
-    def get_option(self, name, *args):
+    def get_option_values(self, name, *args):
         return self.options.get(name, *args)
+
+    def get_option_count(self, name):
+        values = self.get_option_values(name)
+        if values:
+            return len(values)
+        return 0
 
     def __str__(self):
         return self.as_string
 
     def _parse_options(self):
+        def sanitize_value(value):
+            if not hasattr(value, 'isalpha'):
+                return value
+
+            if ((value.startswith('"') and value.endswith('"')) or
+                (value.startswith("'") and value.endswith("'"))):
+                value = value[1:-1]
+
+            return value
+
+        def get_value(next_token):
+            if not next_token.startswith('-'):
+                return sanitize_value(next_token)
+            return True
+
         options = {}
-        for token in self.arguments:
+        for index, token in enumerate(self.arguments):
             if not token.startswith('-'):
                 continue
 
+            try:
+                next_token = self.arguments[index + 1]
+            except IndexError:
+                next_token = None
+
             if token.startswith('--'):
                 key, _, value = token.partition('=')
-                options[key] = value if value else True
-                continue
+                if value:
+                    value = sanitize_value(value)
+                else:
+                    value = get_value(next_token)
+                options.setdefault(key, []).append(value)
+            else:
+                keys = list(token[1:])
+                for key in keys:
+                    value = get_value(next_token)
+                    options.setdefault('-' + key, []).append(value)
 
-            keys = list(token[1:])
-            map(lambda key: options.__setitem__('-' + key, True), keys)
         self.options = options
 
 def tokenize(string):

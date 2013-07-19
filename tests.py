@@ -55,8 +55,43 @@ class TestCase(unittest.TestCase):
         self.assertEqual(len(command.arguments), 3)
         self.assertTrue(command.has_option('-n'))
         self.assertTrue(command.has_option('-b'))
-        self.assertEqual(command.get_option('--fake'), 'yes')
+        self.assertEqual(command.get_option_values('--fake')[0], 'yes')
         self.assertEqual(str(command), command_str)
+
+    def test_repeated_option_values(self):
+        command = sheldon.parse('pip -v -v -v install sheldon')
+        self.assertEqual(command.get_option_count('-v'), 3)
+
+        cmd = 'curl -v --data "foo=bar" --data "bar=foo" http://localhost'
+        command = sheldon.parse(cmd)
+        values = command.get_option_values('--data')
+        self.assertEqual(values[0], 'foo=bar')
+        self.assertEqual(values[1], 'bar=foo')
+
+        cmd = 'curl -v -d "foo=bar" -d "bar=foo" http://localhost'
+        command = sheldon.parse(cmd)
+        values = command.get_option_values('-d')
+        self.assertEqual(values[0], 'foo=bar')
+        self.assertEqual(values[1], 'bar=foo')
+
+        # Determening whether the next token is actually the option value
+        # or an application argument is up to the application. As illustrated
+        # in by this valid, curl, command.
+        cmd = 'curl -v http://localhost'
+        command = sheldon.parse(cmd)
+        values = command.get_option_values('-v')
+        self.assertEqual(values[0], 'http://localhost')
+
+    def test_option_sanitization(self):
+        cmd = 'curl -H "Host: sheldon.com" -d bar=foo http://localhost'
+        command = sheldon.parse(cmd)
+
+        host = command.get_option_values('-H').pop()
+        self.assertEqual(host, 'Host: sheldon.com')
+
+        data = command.get_option_values('-d').pop()
+        self.assertEqual(data, 'bar=foo')
+
 
 if __name__ == '__main__':
     unittest.main()
