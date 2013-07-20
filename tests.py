@@ -17,6 +17,34 @@ class TestAPI(unittest.TestCase):
         self.command_string = 'pip install -U -vvv -r requirements.txt'
         self.command = sheldon.parse(self.command_string)
 
+    def test_redirect_class(self):
+        r = sheldon.Redirect(sheldon.STDERR, sheldon.STDOUT)
+        self.assertEqual(r.mode, 'w')
+        self.assertEqual(str(r), '2>&1')
+        self.assertTrue(r.is_source_stderr())
+        self.assertTrue(not r.is_source_stdin())
+        self.assertTrue(not r.is_source_stdout())
+        self.assertTrue(r.is_destination_stdfd())
+        self.assertTrue(r.is_destination_stdout())
+        self.assertTrue(not r.is_destination_stdin())
+        self.assertTrue(not r.is_destination_stderr())
+
+        # Test mode override in case of standard fp to standard fp
+        r = sheldon.Redirect(sheldon.STDERR, sheldon.STDOUT, mode='a')
+        self.assertEqual(r.mode, 'w')
+
+        r = sheldon.Redirect(sheldon.STDERR, 'stderr.txt', mode='a')
+        self.assertEqual(str(r), '2>> stderr.txt')
+
+        r = sheldon.Redirect(sheldon.STDERR, 'stderr.txt', mode='w')
+        self.assertEqual(str(r), '2> stderr.txt')
+
+        r = sheldon.Redirect(sheldon.STDOUT, 'stdout.txt', mode='w')
+        self.assertEqual(str(r), '> stdout.txt')
+
+        r = sheldon.Redirect(sheldon.STDOUT, 'stdout.txt', mode='a')
+        self.assertEqual(str(r), '>> stdout.txt')
+
     def test_parse(self):
         command_string = 'cat foo.txt'
         command = sheldon.parse(command_string)
@@ -25,6 +53,12 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(command.arguments, ('foo.txt',))
         self.assertEqual(command.tokens, ('cat', 'foo.txt'))
         self.assertEqual(command.as_string, command_string)
+
+        invalid_command = sheldon.parse('#cat foo.txt')
+        self.assertEqual(invalid_command, None)
+
+        invalid_command = sheldon.parse('for i in $(seq 10); do echo $i; done')
+        self.assertEqual(invalid_command, None)
 
     def test_is_comment(self):
         comments = [
@@ -54,6 +88,26 @@ class TestAPI(unittest.TestCase):
 
         command = 'cat /foo/bar'
         self.assertFalse(sheldon.is_script(command))
+
+    def test_is_quoted(self):
+        self.assertTrue(sheldon.is_quoted('"hello"'))
+        self.assertTrue(sheldon.is_quoted("'hello'"))
+        self.assertTrue(sheldon.is_quoted("''"))
+
+        self.assertTrue(not sheldon.is_quoted('hello'))
+        self.assertTrue(not sheldon.is_quoted('"hello"something'))
+
+    def test_is_command(self):
+        self.assertTrue(sheldon.is_command('cat foo.txt'))
+        self.assertTrue(sheldon.is_command('cat "foo.txt"'))
+        self.assertTrue(sheldon.is_command('cat while'))
+        self.assertTrue(sheldon.is_command('../../do_something.sh'))
+
+        command = 'for i in $(seq 10); do echo $i; done'
+        self.assertTrue(not sheldon.is_command(command))
+        self.assertTrue(not sheldon.is_command('#comment'))
+        self.assertTrue(not sheldon.is_command('"not a command"'))
+        self.assertTrue(not sheldon.is_command(''))
 
     def test_get_options(self):
         options = self.command.get_options()
@@ -105,6 +159,15 @@ class TestSimpleCommand(unittest.TestCase):
         self.assertTrue(command.has_option('-b'))
         self.assertEqual(command.get_option_values('--fake')[0], 'yes')
         self.assertEqual(str(command), command_str)
+
+    def test_redirects(self):
+        command_str = 'rm -v -r some/path/* >> deleted.txt 2>> delete_err.txt'
+        command = sheldon.parse(command_str)
+
+        r = command.redirects
+        self.assertEqual(len(r), 2)
+        self.assertEqual(str(r[0]), '>> deleted.txt')
+        self.assertEqual(str(r[1]), '2>> delete_err.txt')
 
     def test_repeated_option_values(self):
         command = sheldon.parse('pip -v -v -v install sheldon')
