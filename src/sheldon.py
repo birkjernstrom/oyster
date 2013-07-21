@@ -5,7 +5,6 @@ http://bit.ly/1baSfhM
 """
 
 import shlex
-import subprocess
 from subprocess import list2cmdline
 
 # http://bit.ly/1baSfhM#tag_02_04
