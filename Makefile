@@ -12,4 +12,4 @@ clean-pyc:
 	$(shell find * -name "*.pyc" | xargs rm -rf)
 
 lint:
-	-pyflakes sheldon/
+	-pyflakes src/
