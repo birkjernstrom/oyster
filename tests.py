@@ -9,12 +9,12 @@ test_directory = os.path.dirname(os.path.abspath(__file__))
 test_directory = os.path.join(test_directory, 'src')
 sys.path.insert(0, test_directory)
 
-import sheldon
+import oyster
 
 
 class TestRedirects(unittest.TestCase):
     def test_api(self):
-        r = sheldon.Redirect(sheldon.STDERR, sheldon.STDOUT)
+        r = oyster.Redirect(oyster.STDERR, oyster.STDOUT)
         self.assertEqual(r.mode, 'w')
         self.assertEqual(str(r), '2>&1')
         self.assertTrue(r.is_source_stderr())
@@ -27,27 +27,27 @@ class TestRedirects(unittest.TestCase):
 
     def test_mode_override(self):
         # Test mode override in case of standard fp to standard fp
-        r = sheldon.Redirect(sheldon.STDERR, sheldon.STDOUT, mode='a')
+        r = oyster.Redirect(oyster.STDERR, oyster.STDOUT, mode='a')
         self.assertEqual(r.mode, 'w')
 
     def test_string_representation(self):
-        r = sheldon.Redirect(sheldon.STDERR, 'stderr.txt', mode='a')
+        r = oyster.Redirect(oyster.STDERR, 'stderr.txt', mode='a')
         self.assertEqual(str(r), '2>> stderr.txt')
 
-        r = sheldon.Redirect(sheldon.STDERR, 'stderr.txt', mode='w')
+        r = oyster.Redirect(oyster.STDERR, 'stderr.txt', mode='w')
         self.assertEqual(str(r), '2> stderr.txt')
 
-        r = sheldon.Redirect(sheldon.STDOUT, 'stdout.txt', mode='w')
+        r = oyster.Redirect(oyster.STDOUT, 'stdout.txt', mode='w')
         self.assertEqual(str(r), '> stdout.txt')
 
-        r = sheldon.Redirect(sheldon.STDOUT, 'stdout.txt', mode='a')
+        r = oyster.Redirect(oyster.STDOUT, 'stdout.txt', mode='a')
         self.assertEqual(str(r), '>> stdout.txt')
 
 
 class TestChain(unittest.TestCase):
     def setUp(self):
         self.cmd = 'cat foo.txt | grep python | wc -l'
-        self.chain = sheldon.parse(self.cmd)
+        self.chain = oyster.parse(self.cmd)
 
     def test_append(self):
         pass
@@ -56,7 +56,7 @@ class TestChain(unittest.TestCase):
         pass
 
     def test_index(self):
-        command = sheldon.Command(['mv', 'foo.txt', 'bar.txt'])
+        command = oyster.Command(['mv', 'foo.txt', 'bar.txt'])
         self.assertEqual(self.chain.index('grep python'), 1)
         self.assertEqual(self.chain.index(self.chain[2]), 2)
         self.assertRaises(ValueError, self.chain.index, str(command))
@@ -68,7 +68,7 @@ class TestChain(unittest.TestCase):
         self.assertRaises(ValueError, self.chain.index, 'echo "Hello"')
 
     def test_pop(self):
-        chain = sheldon.parse('mv foo.txt bar.txt; ls | wc -l')
+        chain = oyster.parse('mv foo.txt bar.txt; ls | wc -l')
         self.assertEqual(len(chain), 3)
         wc = chain.pop()
         self.assertEqual(wc.program, 'wc')
@@ -79,7 +79,7 @@ class TestChain(unittest.TestCase):
         self.assertRaises(IndexError, chain.pop, 1337)
 
     def test_remove(self):
-        chain = sheldon.parse('mv foo.txt bar.txt; ls | wc -l')
+        chain = oyster.parse('mv foo.txt bar.txt; ls | wc -l')
         chain.remove('wc -l')
         self.assertEqual(str(chain), 'mv foo.txt bar.txt; ls')
         chain.remove(chain[chain.index('ls')])
@@ -98,7 +98,7 @@ class TestChain(unittest.TestCase):
 
     def test_chain_add(self):
         cmd = 'mv foo.txt bar.txt'
-        chain = sheldon.parse(cmd)
+        chain = oyster.parse(cmd)
         combined = self.chain + chain
 
         self.assertTrue(id(combined) != id(self.chain))
@@ -113,9 +113,9 @@ class TestChain(unittest.TestCase):
 
     def test_chain_iadd(self):
         first_cmd = 'mv foo.txt bar.txt'
-        first = sheldon.parse(first_cmd)
+        first = oyster.parse(first_cmd)
         second_cmd = 'cat bar.txt'
-        second = sheldon.parse(second_cmd)
+        second = oyster.parse(second_cmd)
 
         first_id = id(first)
         first += second
@@ -132,7 +132,7 @@ class TestChain(unittest.TestCase):
         self.assertTrue(not 'mv foo.txt bar.txt' in self.chain)
 
     def test_delete(self):
-        chain = sheldon.parse('ls | wc -l')
+        chain = oyster.parse('ls | wc -l')
         self.assertEqual(len(chain), 2)
         del chain[1]
         self.assertEqual(len(chain), 1)
@@ -147,19 +147,19 @@ class TestChain(unittest.TestCase):
         self.assertTrue(did_raise)
 
     def test_delete_slice(self):
-        chain = sheldon.parse('cd /some/path; ls | wc -l')
+        chain = oyster.parse('cd /some/path; ls | wc -l')
         self.assertEqual(len(chain), 3)
         del chain[-1]
         self.assertEqual(len(chain), 2)
         self.assertEqual(str(chain), 'cd /some/path; ls')
 
     def test_equal(self):
-        copy = sheldon.parse(str(self.chain))
+        copy = oyster.parse(str(self.chain))
         self.assertTrue(id(self.chain) != id(copy))
         self.assertEqual(self.chain, copy)
 
     def test_not_equal(self):
-        copy = sheldon.parse(str(self.chain))
+        copy = oyster.parse(str(self.chain))
         copy.append('less')
         self.assertTrue(self.chain != copy)
 
@@ -177,7 +177,7 @@ class TestChain(unittest.TestCase):
 class TestCommand(unittest.TestCase):
     def setUp(self):
         self.command_string = 'pip install -U -vvv -r requirements.txt'
-        self.command = sheldon.parse(self.command_string)[0]
+        self.command = oyster.parse(self.command_string)[0]
 
     def test_get_options(self):
         options = self.command.get_options()
@@ -214,7 +214,7 @@ class TestCommand(unittest.TestCase):
 
     def test_simple_command(self):
         command_str = 'cat -nb --fake=yes /foo/bar'
-        command = sheldon.parse(command_str)[0]
+        command = oyster.parse(command_str)[0]
         self.assertTrue(command.program == 'cat')
         self.assertEqual(len(command.arguments), 3)
         self.assertTrue(command.has_option('-n'))
@@ -224,7 +224,7 @@ class TestCommand(unittest.TestCase):
 
     def test_redirects(self):
         command_str = 'rm -v -r some/path/* >> deleted.txt 2>> delete_err.txt'
-        command = sheldon.parse(command_str)[0]
+        command = oyster.parse(command_str)[0]
 
         r = command.redirects
         self.assertEqual(len(r), 2)
@@ -232,17 +232,17 @@ class TestCommand(unittest.TestCase):
         self.assertEqual(str(r[1]), '2>> delete_err.txt')
 
     def test_repeated_option_values(self):
-        command = sheldon.parse('pip -v -v -v install sheldon')[0]
+        command = oyster.parse('pip -v -v -v install oyster')[0]
         self.assertEqual(command.get_option_count('-v'), 3)
 
         cmd = 'curl -v --data "foo=bar" --data "bar=foo" http://localhost'
-        command = sheldon.parse(cmd)[0]
+        command = oyster.parse(cmd)[0]
         values = command.get_option_values('--data')
         self.assertEqual(values[0], 'foo=bar')
         self.assertEqual(values[1], 'bar=foo')
 
         cmd = 'curl -v -d "foo=bar" -d "bar=foo" http://localhost'
-        command = sheldon.parse(cmd)[0]
+        command = oyster.parse(cmd)[0]
         values = command.get_option_values('-d')
         self.assertEqual(values[0], 'foo=bar')
         self.assertEqual(values[1], 'bar=foo')
@@ -251,16 +251,16 @@ class TestCommand(unittest.TestCase):
         # or an application argument is up to the application. As illustrated
         # in by this valid, curl, command.
         cmd = 'curl -v http://localhost'
-        command = sheldon.parse(cmd)[0]
+        command = oyster.parse(cmd)[0]
         values = command.get_option_values('-v')
         self.assertEqual(values[0], 'http://localhost')
 
     def test_option_sanitization(self):
-        cmd = 'curl -H "Host: sheldon.com" -d bar=foo http://localhost'
-        command = sheldon.parse(cmd)[0]
+        cmd = 'curl -H "Host: oyster.com" -d bar=foo http://localhost'
+        command = oyster.parse(cmd)[0]
 
         host = command.get_option_values('-H').pop()
-        self.assertEqual(host, 'Host: sheldon.com')
+        self.assertEqual(host, 'Host: oyster.com')
 
         data = command.get_option_values('-d').pop()
         self.assertEqual(data, 'bar=foo')
@@ -280,25 +280,25 @@ class TestAPI(unittest.TestCase):
         ]
 
         for test in tests:
-            tokens = sheldon.split_token_by_operators(test[0])
+            tokens = oyster.split_token_by_operators(test[0])
             self.assertEqual(len(tokens), test[1])
 
     def test_tokenize(self):
         # Only limited testing required since shlex handles the dirty work
         command = "grep -r 'foo' /some/file"
-        tokens = sheldon.tokenize(command)
+        tokens = oyster.tokenize(command)
         self.assertTrue(isinstance(tokens, list))
         self.assertEqual(len(tokens), 4)
 
         no_whitespace = 'cd /some/path;ls|wc -l'
-        chain = sheldon.parse(no_whitespace)
+        chain = oyster.parse(no_whitespace)
         self.assertTrue(len(chain), 3)
         self.assertEqual(str(chain[0]), 'cd /some/path')
         self.assertEqual(str(chain[1]), 'ls')
         self.assertEqual(str(chain[2]), 'wc -l')
 
         with_cmd_substitution = 'grep $(echo $1 | sed "s/^\\(.\\)/[\\1]/g")'
-        chain = sheldon.parse(with_cmd_substitution)
+        chain = oyster.parse(with_cmd_substitution)
         self.assertEqual(len(chain), 1)
         self.assertEqual(len(chain[0].arguments), 1)
 
@@ -310,7 +310,7 @@ class TestAPI(unittest.TestCase):
             '#Final#Comment#',
         ]
         for comment in comments:
-            self.assertTrue(sheldon.is_comment(comment))
+            self.assertTrue(oyster.is_comment(comment))
 
         not_comments = [
             'This is not a comment #',
@@ -319,51 +319,51 @@ class TestAPI(unittest.TestCase):
             'cat /path/to/some/file  # Especially not me',
         ]
         for command in not_comments:
-            self.assertFalse(sheldon.is_comment(command))
+            self.assertFalse(oyster.is_comment(command))
 
     def test_is_script(self):
         script = """for i in $(ls /some/directory); do
             echo $i
         done
         """
-        self.assertTrue(sheldon.is_script(script))
+        self.assertTrue(oyster.is_script(script))
 
         command = 'cat /foo/bar'
-        self.assertFalse(sheldon.is_script(command))
+        self.assertFalse(oyster.is_script(command))
 
     def test_is_quoted(self):
-        self.assertTrue(sheldon.is_quoted('"hello"'))
-        self.assertTrue(sheldon.is_quoted("'hello'"))
-        self.assertTrue(sheldon.is_quoted("''"))
+        self.assertTrue(oyster.is_quoted('"hello"'))
+        self.assertTrue(oyster.is_quoted("'hello'"))
+        self.assertTrue(oyster.is_quoted("''"))
 
-        self.assertTrue(not sheldon.is_quoted('hello'))
-        self.assertTrue(not sheldon.is_quoted('"hello"something'))
+        self.assertTrue(not oyster.is_quoted('hello'))
+        self.assertTrue(not oyster.is_quoted('"hello"something'))
 
     def test_is_command(self):
-        self.assertTrue(sheldon.is_command('cat foo.txt'))
-        self.assertTrue(sheldon.is_command('cat "foo.txt"'))
-        self.assertTrue(sheldon.is_command('cat while'))
-        self.assertTrue(sheldon.is_command('../../do_something.sh'))
+        self.assertTrue(oyster.is_command('cat foo.txt'))
+        self.assertTrue(oyster.is_command('cat "foo.txt"'))
+        self.assertTrue(oyster.is_command('cat while'))
+        self.assertTrue(oyster.is_command('../../do_something.sh'))
 
         command = 'for i in $(seq 10); do echo $i; done'
-        self.assertTrue(not sheldon.is_command(command))
-        self.assertTrue(not sheldon.is_command('#comment'))
-        self.assertTrue(not sheldon.is_command('"not a command"'))
-        self.assertTrue(not sheldon.is_command(''))
+        self.assertTrue(not oyster.is_command(command))
+        self.assertTrue(not oyster.is_command('#comment'))
+        self.assertTrue(not oyster.is_command('"not a command"'))
+        self.assertTrue(not oyster.is_command(''))
 
     def test_parse(self):
         command_string = 'cat foo.txt'
-        command = sheldon.parse(command_string)[0]
-        self.assertTrue(isinstance(command, sheldon.Command))
+        command = oyster.parse(command_string)[0]
+        self.assertTrue(isinstance(command, oyster.Command))
         self.assertEqual(command.program, 'cat')
         self.assertEqual(command.arguments, ('foo.txt',))
         self.assertEqual(command.tokens, ('cat', 'foo.txt'))
         self.assertEqual(command.as_string, command_string)
 
-        invalid_command = sheldon.parse('#cat foo.txt')
+        invalid_command = oyster.parse('#cat foo.txt')
         self.assertTrue(not invalid_command)
 
-        invalid_command = sheldon.parse('for i in $(seq 10); do echo $i; done')
+        invalid_command = oyster.parse('for i in $(seq 10); do echo $i; done')
         self.assertTrue(not invalid_command)
 
 
