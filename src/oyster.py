@@ -245,7 +245,7 @@ class Command(object):
             elif token[next_index] == '>':
                 mode = 'a'
                 destination = output_file
-        except IndexError, ValueError:
+        except (IndexError, ValueError):
             pass
 
         if not destination:
