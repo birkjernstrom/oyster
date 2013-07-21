@@ -72,13 +72,120 @@ class Redirect(object):
         return as_string.format(source=source, operator=operator,
                                 separator=separator, destination=destination)
 
+
+class Chain(object):
+    def __init__(self):
+        self.commands = []
+        self._strings = []
+        self._operators = []
+
+    def append(self, command, chained_by=None):
+        command = self._normalize_command(command)
+        chained_by = chained_by if chained_by else ';'
+
+        self.commands.append(command)
+        self._strings.append(str(command))
+        self._operators.append(chained_by)
+
+    def insert(self, index, command, chained_by=None):
+        command = self._normalize_command(command)
+        chained_by = chained_by if chained_by else ';'
+
+        self.commands.insert(index, command)
+        self._strings.insert(index, str(command))
+        self._operators.insert(index, chained_by)
+
+    def index(self, command, *args):
+        if hasattr(command, 'get_options'):
+            return self.commands.index(command, *args)
+        return self._strings.index(command, *args)
+
+    def pop(self, *args):
+        ret = self.commands.pop(*args)
+        self._strings.pop(*args)
+        self._operators.pop(*args)
+        return ret
+
+    def remove(self, command):
+        index = self.index(command)
+        del self.commands[index]
+        del self._strings[index]
+        del self._operators[index]
+
+    def __add__(self, chain):
+        c = Chain()
+        c.commands = self.commands + chain.commands
+        c._strings = self._strings + chain._strings
+        c._operators = self._operators + chain._operators
+        return c
+
+    def __iadd__(self, chain):
+        self.commands += chain.commands
+        self._strings += chain._strings
+        self._operators += chain._operators
+        return self
+
+    def __contains__(self, command):
+        if not hasattr(command, 'isalpha'):
+            return command in self.commands
+        return command in self._strings
+
+    def __delitem__(self, *args):
+        self.commands.__delitem__(*args)
+        self._strings.__delitem__(*args)
+        self._operators.__delitem__(*args)
+
+    def __delslice__(self, *args):
+        self.commands.__delslice__(*args)
+        self._strings.__delslice__(*args)
+        self._operators.__delslice__(*args)
+
+    def __eq__(self, chain):
+        return str(self) == str(chain)
+
+    def __ne__(self, chain):
+        return not self.__eq__(chain)
+
+    def __getitem__(self, index):
+        return self.commands.__getitem__(index)
+
+    def __getslice__(self, *args):
+        c = Chain()
+        c.commands = self.commands.__getslice__(*args)
+        c._strings = self._strings.__getslice__(*args)
+        c._operators = self._operators.__getslice__(*args)
+        return c
+
+    def __len__(self):
+        return self.commands.__len__()
+
+    def __str__(self):
+        operators = self._operators[:]
+        operators[0] = None
+        commands = [str(command) for command in self.commands]
+
+        components = []
+        for index, operator in enumerate(operators):
+            if operator:
+                whitespace = ' '
+                if operator == ';':
+                    whitespace = ''
+                components.append('{0}{1} '.format(whitespace, operator))
+            components.append(commands[index])
+        return ''.join(components)
+
+    def _normalize_command(self, command):
+        if hasattr(command, 'get_options'):
+            return command
+
+        chain = parse(command)
+        if not chain:
+            raise ValueError('invalid command')
+        return chain.pop()
+
+
 class Command(object):
-    def __init__(self,
-                 tokens,
-                 before=None,
-                 before_operator=None,
-                 after=None,
-                 after_operator=None):
+    def __init__(self, tokens):
         """
         """
         self.program = tokens[0]
@@ -86,7 +193,6 @@ class Command(object):
         self.tokens = tuple(tokens)
 
         self.as_string = subprocess.list2cmdline(self.tokens)
-
         self.redirects = tuple([])
         self._process_arguments(self.arguments)
 
@@ -163,7 +269,8 @@ class Command(object):
             return value
 
         def get_value(next_token):
-            if not next_token.startswith('-'):
+            if (hasattr(next_token, 'startswith') and
+                not next_token.startswith('-')):
                 return sanitize_value(next_token)
             return True
 
@@ -194,8 +301,99 @@ class Command(object):
         self._options = options
 
 
+def split_token_by_operators(string):
+    if len(string) <= 1 or is_quoted(string):
+        return [string]
+
+    tokens = []
+    characters = []
+    consume_next = False
+    previous_character = None
+    for index, character in enumerate(string):
+        if consume_next:
+            consume_next = False
+            previous_character = character
+            continue
+
+        try:
+            next_character = string[index + 1]
+        except IndexError:
+            next_character = ''
+
+        is_escaped = (character == '\\' and
+                      previous_character != '\\' and
+                      next_character != '\\')
+
+        if is_escaped:
+            characters.append(character)
+            characters.append(next_character)
+            consume_next = True
+            continue
+
+        found = False
+        for operator in CONTROL_OPERATORS:
+            if operator == character:
+                found = True
+                break
+
+            if operator == character + next_character:
+                found = True
+                consume_next = True
+                break
+
+        previous_character = character
+        if found:
+            tokens.append(''.join(characters))
+            tokens.append(operator)
+            characters = []
+        else:
+            characters.append(character)
+
+    if characters:
+        tokens.append(''.join(characters))
+    return tokens
+
 def tokenize(string):
-    return shlex.split(string, posix=True)
+    processed = []
+    lex = shlex.shlex(string, posix=True)
+    lex.whitespace_split = True
+    lex.commenters = ''
+
+    in_substitution = False
+    substitution_closer = None
+    substitution_tokens = []
+
+    while True:
+        token = lex.get_token()
+        if token is None:
+            break
+
+        if in_substitution:
+            substitution_tokens.append(token)
+            if token.endswith(substitution_closer):
+                processed.append(''.join(substitution_tokens))
+                substitution_tokens = []
+                in_substitution = False
+            continue
+
+        if token.startswith('$('):
+            in_substitution = True
+            substitution_closer = ')'
+            substitution_tokens.append(token)
+            continue
+
+        if token.startswith('`'):
+            in_substitution = True
+            substitution_closer = '`'
+            substitution_tokens.append(token)
+            continue
+
+        # Handle the case of: cd /some/path&&ls
+        processed.extend(split_token_by_operators(token))
+
+    if substitution_tokens:
+        processed.append(''.join(substitution_tokens))
+    return processed
 
 
 def is_comment(string):
@@ -203,11 +401,17 @@ def is_comment(string):
 
 
 def is_script(string):
-    tokens = string if hasattr(string, 'append') else tokenize(string)
-    return tokens[0] in RESERVED_WORDS
+    is_script = False
+    string = string.lstrip()
+    for reserved in RESERVED_WORDS:
+        if string.startswith(reserved):
+            is_script = True
+            break
+    return is_script
 
 
 def is_quoted(string):
+    string = string.lstrip()
     return ((string.startswith('"') and string.endswith('"')) or
             (string.startswith("'") and string.endswith("'")))
 
@@ -222,40 +426,36 @@ def is_command(string, tokens=None):
     if is_quoted(string):
         return False
 
-    tokens = tokens if tokens else tokenize(string)
-    if not tokens:
-        return False
-
-    if is_script(tokens):
+    if is_script(string):
         return False
     return True
 
 
 def parse(string):
-    if not string:
-        return None
+    chain = Chain()
+    if not (string or hasattr(string, 'isalpha')):
+        return chain
 
     tokens = tokenize(string)
     if not is_command(string, tokens):
-        return None
+        return chain
 
-    commands = []
     chained_by = None
     command_tokens = []
+    to_parse = tokens + [';']
     control_operator_lookup = dict(zip(CONTROL_OPERATORS, CONTROL_OPERATORS))
-    for index, token in enumerate(tokens + [';']):
+    for index, token in enumerate(to_parse):
         if token not in control_operator_lookup:
             command_tokens.append(token)
             continue
 
-        try:
-            previous_command = commands[-1]
-        except IndexError:
-            previous_command = None
+        if is_script(command_tokens[0]):
+            # Abort entire chain if script is detected
+            chain = Chain()
+            break
 
         command = Command(command_tokens)
-        commands.append(command)
-
+        chain.append(command, chained_by=chained_by)
         chained_by = token
         command_tokens = []
-    return commands[0]
+    return chain
