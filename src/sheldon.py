@@ -6,6 +6,7 @@ http://bit.ly/1baSfhM
 
 import shlex
 import subprocess
+from subprocess import list2cmdline
 
 # http://bit.ly/1baSfhM#tag_02_04
 RESERVED_WORDS = frozenset([
@@ -192,7 +193,7 @@ class Command(object):
         self.arguments = tuple(tokens[1:])
         self.tokens = tuple(tokens)
 
-        self.as_string = subprocess.list2cmdline(self.tokens)
+        self.as_string = list2cmdline(self.tokens)
         self.redirects = tuple([])
         self._process_arguments(self.arguments)
 
