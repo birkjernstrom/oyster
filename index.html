@@ -9,6 +9,7 @@
         <title>Oyster</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="static/css/solarized.css" media="all" rel="stylesheet" type="text/css" />
     </head>
     <body>
         <!--[if lt IE 7]>
@@ -43,32 +44,30 @@ The main objective is rather to parse any given shell command whether it be a ch
 
 <h2>Demo</h2>
 
-<p>```python
-import oyster</p>
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">oyster</span>
 
-<p>chain = oyster.parse('pip search -vvv --timeout=5 flask | grep session | less')
-print len(chain)  # ==&gt; 3</p>
+<span class="n">chain</span> <span class="o">=</span> <span class="n">oyster</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;pip search -vvv --timeout=5 flask | grep session | less&#39;</span><span class="p">)</span>
+<span class="k">print</span> <span class="nb">len</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>  <span class="c"># ==&gt; 3</span>
 
-<p>pip, grep, less = chain</p>
+<span class="n">pip</span><span class="p">,</span> <span class="n">grep</span><span class="p">,</span> <span class="n">less</span> <span class="o">=</span> <span class="n">chain</span>
 
-<p>print pip.has<em>option('--timeout')  # ==&gt; True
-print pip.get</em>option<em>values('--timeout')  # ==&gt; ['5']
-print pip.get</em>option_count('-v')  # ==&gt; 3
-print pip.arguments  # ==&gt; ('search', '--timeout=5', 'flask')</p>
+<span class="k">print</span> <span class="n">pip</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="s">&#39;--timeout&#39;</span><span class="p">)</span>  <span class="c"># ==&gt; True</span>
+<span class="k">print</span> <span class="n">pip</span><span class="o">.</span><span class="n">get_option_values</span><span class="p">(</span><span class="s">&#39;--timeout&#39;</span><span class="p">)</span>  <span class="c"># ==&gt; [&#39;5&#39;]</span>
+<span class="k">print</span> <span class="n">pip</span><span class="o">.</span><span class="n">get_option_count</span><span class="p">(</span><span class="s">&#39;-v&#39;</span><span class="p">)</span>  <span class="c"># ==&gt; 3</span>
+<span class="k">print</span> <span class="n">pip</span><span class="o">.</span><span class="n">arguments</span>  <span class="c"># ==&gt; (&#39;search&#39;, &#39;--timeout=5&#39;, &#39;flask&#39;)</span>
 
-<p>print grep  # ==&gt; 'grep session'
-print less  # ==&gt; 'less'</p>
+<span class="k">print</span> <span class="n">grep</span>  <span class="c"># ==&gt; &#39;grep session&#39;</span>
+<span class="k">print</span> <span class="n">less</span>  <span class="c"># ==&gt; &#39;less&#39;</span>
 
-<p>chain.remove('less')
-print chain  # ==&gt; 'pip search -vvv --timeout=5 flask | grep session'</p>
+<span class="n">chain</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;less&#39;</span><span class="p">)</span>
+<span class="k">print</span> <span class="n">chain</span>  <span class="c"># ==&gt; &#39;pip search -vvv --timeout=5 flask | grep session&#39;</span>
 
-<p>chain += 'date -u'
-print chain  # ==&gt; 'pip search -vvv --timeout=5 flask | grep session; date -u'
-utc<em>date = chain[chain.index('date -u')]
-print utc</em>date  # ==&gt; 'date -u'
-print utc<em>date.get</em>option_values('-u')  # ==&gt; [True]</p>
-
-<p>```</p>
+<span class="n">chain</span> <span class="o">+=</span> <span class="s">&#39;date -u&#39;</span>
+<span class="k">print</span> <span class="n">chain</span>  <span class="c"># ==&gt; &#39;pip search -vvv --timeout=5 flask | grep session; date -u&#39;</span>
+<span class="n">utc_date</span> <span class="o">=</span> <span class="n">chain</span><span class="p">[</span><span class="n">chain</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s">&#39;date -u&#39;</span><span class="p">)]</span>
+<span class="k">print</span> <span class="n">utc_date</span>  <span class="c"># ==&gt; &#39;date -u&#39;</span>
+<span class="k">print</span> <span class="n">utc_date</span><span class="o">.</span><span class="n">get_option_values</span><span class="p">(</span><span class="s">&#39;-u&#39;</span><span class="p">)</span>  <span class="c"># ==&gt; [True]</span>
+</pre></div>
 
 <h2>Installation</h2>
 
@@ -102,47 +101,44 @@ Once you are done - all you need to do is follow the standard procedure for crea
 
 <h2>Features</h2>
 
-<p>####Chains:
-```python
-import oyster</p>
+<p>####Chains:</p>
 
-<p>chain = oyster.parse('cat /var/log/system.log | grep kernel &gt;&gt; system<em>kernel.log 2>&gt; errors.log')
-cat, grep = chain
-print cat  # ==&gt; 'cat /var/log/system.log'
-print grep  # ==&gt; 'grep kernel &gt;&gt; system</em>kernel.log 2>&gt; errors.log'</p>
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">oyster</span>
 
-<p>```</p>
+<span class="n">chain</span> <span class="o">=</span> <span class="n">oyster</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;cat /var/log/system.log | grep kernel &gt;&gt; system_kernel.log 2&gt;&gt; errors.log&#39;</span><span class="p">)</span>
+<span class="n">cat</span><span class="p">,</span> <span class="n">grep</span> <span class="o">=</span> <span class="n">chain</span>
+<span class="k">print</span> <span class="n">cat</span>  <span class="c"># ==&gt; &#39;cat /var/log/system.log&#39;</span>
+<span class="k">print</span> <span class="n">grep</span>  <span class="c"># ==&gt; &#39;grep kernel &gt;&gt; system_kernel.log 2&gt;&gt; errors.log&#39;</span>
+</pre></div>
 
-<p>####Commands:
-```python
-import oyster</p>
+<p>####Commands:</p>
 
-<p>command = oyster.Command(['cat', '-n', 'foo.txt'])
-print command  # ==&gt; 'cat -n foo.txt'
-print command.program  # ==&gt; 'cat'
-print command.arguments  # ==&gt; ('-n', 'foo.txt')
-print command.has<em>option('-n')  # ==&gt; True
-print command.get</em>option<em>values('-n')  # ==&gt; ['foo.txt']  (See "Caveats" about this)
-print command.get</em>option<em>count('-n')  # ==&gt; 1
-print command.get</em>options()  # ==&gt; {'-n': ['foo.txt']}  (See "Caveats" about this)
-```</p>
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">oyster</span>
+
+<span class="n">command</span> <span class="o">=</span> <span class="n">oyster</span><span class="o">.</span><span class="n">Command</span><span class="p">([</span><span class="s">&#39;cat&#39;</span><span class="p">,</span> <span class="s">&#39;-n&#39;</span><span class="p">,</span> <span class="s">&#39;foo.txt&#39;</span><span class="p">])</span>
+<span class="k">print</span> <span class="n">command</span>  <span class="c"># ==&gt; &#39;cat -n foo.txt&#39;</span>
+<span class="k">print</span> <span class="n">command</span><span class="o">.</span><span class="n">program</span>  <span class="c"># ==&gt; &#39;cat&#39;</span>
+<span class="k">print</span> <span class="n">command</span><span class="o">.</span><span class="n">arguments</span>  <span class="c"># ==&gt; (&#39;-n&#39;, &#39;foo.txt&#39;)</span>
+<span class="k">print</span> <span class="n">command</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="s">&#39;-n&#39;</span><span class="p">)</span>  <span class="c"># ==&gt; True</span>
+<span class="k">print</span> <span class="n">command</span><span class="o">.</span><span class="n">get_option_values</span><span class="p">(</span><span class="s">&#39;-n&#39;</span><span class="p">)</span>  <span class="c"># ==&gt; [&#39;foo.txt&#39;]  (See &quot;Caveats&quot; about this)</span>
+<span class="k">print</span> <span class="n">command</span><span class="o">.</span><span class="n">get_option_count</span><span class="p">(</span><span class="s">&#39;-n&#39;</span><span class="p">)</span>  <span class="c"># ==&gt; 1</span>
+<span class="k">print</span> <span class="n">command</span><span class="o">.</span><span class="n">get_options</span><span class="p">()</span>  <span class="c"># ==&gt; {&#39;-n&#39;: [&#39;foo.txt&#39;]}  (See &quot;Caveats&quot; about this)</span>
+</pre></div>
 
 <p>####Redirects:</p>
 
-<p>```python
-import oyster</p>
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">oyster</span>
 
-<p>chain = oyster.parse('cat /var/log/system.log | grep kernel &gt;&gt; system<em>kernel.log 2>&gt; errors.log')
-print chain[0].redirects  # ==&gt; ()
-print chain[1].redirects[0]  # ==&gt; &gt;&gt; system</em>kernel.log
-print chain[1].redirects[0].source == oyster.STDOUT  # ==&gt; True
-print chain[1].redirects[0].destination == 'system<em>kernel.log'  # ==&gt; True
-print chain[1].redirects[0].mode  # ==&gt; 'a'
-print chain[1].redirects[1]  # ==&gt; 2>&gt; errors.log
-print chain[1].redirects[1].is</em>source<em>stderr()  # ==&gt; True
-print chain[1].redirects[1].is</em>destination_stdfd()  # ==&gt; False</p>
-
-<p>```</p>
+<span class="n">chain</span> <span class="o">=</span> <span class="n">oyster</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;cat /var/log/system.log | grep kernel &gt;&gt; system_kernel.log 2&gt;&gt; errors.log&#39;</span><span class="p">)</span>
+<span class="k">print</span> <span class="n">chain</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">redirects</span>  <span class="c"># ==&gt; ()</span>
+<span class="k">print</span> <span class="n">chain</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">redirects</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c"># ==&gt; &gt;&gt; system_kernel.log</span>
+<span class="k">print</span> <span class="n">chain</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">redirects</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="n">oyster</span><span class="o">.</span><span class="n">STDOUT</span>  <span class="c"># ==&gt; True</span>
+<span class="k">print</span> <span class="n">chain</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">redirects</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">destination</span> <span class="o">==</span> <span class="s">&#39;system_kernel.log&#39;</span>  <span class="c"># ==&gt; True</span>
+<span class="k">print</span> <span class="n">chain</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">redirects</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mode</span>  <span class="c"># ==&gt; &#39;a&#39;</span>
+<span class="k">print</span> <span class="n">chain</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">redirects</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c"># ==&gt; 2&gt;&gt; errors.log</span>
+<span class="k">print</span> <span class="n">chain</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">redirects</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">is_source_stderr</span><span class="p">()</span>  <span class="c"># ==&gt; True</span>
+<span class="k">print</span> <span class="n">chain</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">redirects</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">is_destination_stdfd</span><span class="p">()</span>  <span class="c"># ==&gt; False</span>
+</pre></div>
 
 <h2>Caveats</h2>
 
