@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Welcome to Oyster’s documentation! &mdash; Oyster 0.1.0 documentation</title>
+    <title>Oyster &mdash; Oyster 0.1.0 documentation</title>
     
     <link rel="stylesheet" href="static/nature.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
@@ -44,25 +44,614 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="welcome-to-oyster-s-documentation">
-<h1>Welcome to Oyster&#8217;s documentation!<a class="headerlink" href="#welcome-to-oyster-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p>Contents:</p>
-<div class="toctree-wrapper compound">
-<ul class="simple">
+  <span class="target" id="module-oyster"></span><div class="section" id="oyster">
+<h1>Oyster<a class="headerlink" href="#oyster" title="Permalink to this headline">¶</a></h1>
+<p><strong>A Python parser of shell commands.</strong></p>
+<p>This module strives to support commands executed within the sh, bash
+and zsh shells alike. An important limitation to mention is that Oyster
+does not support parsing of scripted commands, i.e:</p>
+<blockquote>
+<div>for i in $(seq 10); do echo $i; done</div></blockquote>
+<p>This might change in a future version of Oyster - at least in order to
+support one-liners like the one above.</p>
+<p><em>Features to be included in upcoming releases:</em></p>
+<blockquote>
+<div><ul class="simple">
+<li>Extended <a class="reference internal" href="#oyster.Chain" title="oyster.Chain"><tt class="xref py py-class docutils literal"><span class="pre">Chain</span></tt></a> API to ease extending the chain with
+additional commands and various control operators.</li>
+<li>Parse command substitutions</li>
 </ul>
-</div>
-</div>
-<div class="section" id="module-oyster">
-<span id="constants"></span><h1>Constants<a class="headerlink" href="#module-oyster" title="Permalink to this headline">¶</a></h1>
-<p><a class="reference external" href="http://bit.ly/1baSfhM">http://bit.ly/1baSfhM</a></p>
-</div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
-<ul class="simple">
-<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
-<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
-<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</div></blockquote>
+<p><em>Features which may be included in upcoming releases:</em></p>
+<blockquote>
+<div><ul class="simple">
+<li>Support for parsing scripted commands</li>
+<li>Command execution simulation: Iterate through the command chain
+depending on the given, simulated, exit code and/or output
+of the current command within the iteration.</li>
 </ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">copyright:</th><td class="field-body"><ol class="first loweralpha simple" start="3">
+<li>2013 by Birk Nilson.</li>
+</ol>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">license:</th><td class="field-body"><p class="first last">BSD, see LICENSE for more details.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="constants">
+<h1>Constants<a class="headerlink" href="#constants" title="Permalink to this headline">¶</a></h1>
+<dl class="data">
+<dt id="oyster.RESERVED_WORDS">
+<tt class="descclassname">oyster.</tt><tt class="descname">RESERVED_WORDS</tt><em class="property"> = frozenset(['!', 'case', 'elif', 'for', 'do', 'else', 'while', 'done', 'then', 'in', 'esac', 'fi', '{', '}', 'until', 'if'])</em><a class="headerlink" href="#oyster.RESERVED_WORDS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set of words which are reserved in the shell.
+See: <a class="reference external" href="http://bit.ly/1baSfhM#tag_02_04">http://bit.ly/1baSfhM#tag_02_04</a></p>
+</dd></dl>
+
+<dl class="data">
+<dt id="oyster.CONTROL_OPERATORS">
+<tt class="descclassname">oyster.</tt><tt class="descname">CONTROL_OPERATORS</tt><em class="property"> = frozenset([';', '||', '|', '&amp;&amp;'])</em><a class="headerlink" href="#oyster.CONTROL_OPERATORS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Control operators which chain multiple commands</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="oyster.STDIN">
+<tt class="descclassname">oyster.</tt><tt class="descname">STDIN</tt><em class="property"> = 0</em><a class="headerlink" href="#oyster.STDIN" title="Permalink to this definition">¶</a></dt>
+<dd><p>The file descriptor of the standard input file</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="oyster.STDOUT">
+<tt class="descclassname">oyster.</tt><tt class="descname">STDOUT</tt><em class="property"> = 1</em><a class="headerlink" href="#oyster.STDOUT" title="Permalink to this definition">¶</a></dt>
+<dd><p>The file descriptor of the standard output file</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="oyster.STDERR">
+<tt class="descclassname">oyster.</tt><tt class="descname">STDERR</tt><em class="property"> = 2</em><a class="headerlink" href="#oyster.STDERR" title="Permalink to this definition">¶</a></dt>
+<dd><p>The file descriptor of the standard error file</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="oyster.STDFD_MAPPING">
+<tt class="descclassname">oyster.</tt><tt class="descname">STDFD_MAPPING</tt><em class="property"> = {0: 'stdin', 1: 'stdout', 2: 'stderr'}</em><a class="headerlink" href="#oyster.STDFD_MAPPING" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mapping of the standard file descriptors and their common names</p>
+</dd></dl>
+
+</div>
+<div class="section" id="chains">
+<h1>Chains<a class="headerlink" href="#chains" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="oyster.Chain">
+<em class="property">class </em><tt class="descclassname">oyster.</tt><tt class="descname">Chain</tt><a class="headerlink" href="#oyster.Chain" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list-like object containing all the individual commands which have
+been chained together using control operators in the shell.</p>
+<p>Unlike a regular Python list the <a class="reference internal" href="#oyster.Chain" title="oyster.Chain"><tt class="xref py py-class docutils literal"><span class="pre">Chain</span></tt></a> instance does not implement the
+<tt class="docutils literal"><span class="pre">.extend</span></tt>, <tt class="docutils literal"><span class="pre">.sort</span></tt> and <tt class="docutils literal"><span class="pre">.count</span></tt> methods. Also it introduces the
+<tt class="docutils literal"><span class="pre">chain_by</span></tt> parameter to the <tt class="docutils literal"><span class="pre">.append</span></tt> and <tt class="docutils literal"><span class="pre">.insert</span></tt> methods.</p>
+<p>Oyster treats all shell commands as a chain even in the case of a single
+program being executed. This is a design choice to simplify usage of the
+module since it is easier if <a class="reference internal" href="#oyster.parse" title="oyster.parse"><tt class="xref py py-func docutils literal"><span class="pre">parse()</span></tt></a> consistently returns the
+same type. As shown here:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">oyster</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">commands</span> <span class="o">=</span> <span class="n">oyster</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;ps aux | grep python&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">commands</span><span class="p">)</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="p">,</span> <span class="n">grep</span> <span class="o">=</span> <span class="n">commands</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">arguments</span>
+<span class="go">(&#39;aux&#39;,)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span> <span class="o">=</span> <span class="n">oyster</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;ps aux&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">program</span>
+<span class="go">&#39;ps&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oyster.Chain.commands">
+<tt class="descclassname">Chain.</tt><tt class="descname">commands</tt><em class="property"> = None</em><a class="headerlink" href="#oyster.Chain.commands" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list containing all the individual <a class="reference internal" href="#oyster.Command" title="oyster.Command"><tt class="xref py py-class docutils literal"><span class="pre">Command</span></tt></a> instances</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oyster.Chain.append">
+<tt class="descclassname">Chain.</tt><tt class="descname">append</tt><big>(</big><em>command</em><span class="optional">[</span>, <em>chained_by=';'</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#oyster.Chain.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append given <tt class="docutils literal"><span class="pre">command</span></tt> to the chain with the
+<tt class="docutils literal"><span class="pre">chained_by</span></tt> as the separating control operator.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>command</strong> &#8211; A string representing the command or an
+instance of <a class="reference internal" href="#oyster.Command" title="oyster.Command"><tt class="xref py py-class docutils literal"><span class="pre">Command</span></tt></a></li>
+<li><strong>chained_by</strong> &#8211; One of the control operators defined in the
+<a class="reference internal" href="#oyster.CONTROL_OPERATORS" title="oyster.CONTROL_OPERATORS"><tt class="xref py py-attr docutils literal"><span class="pre">CONTROL_OPERATORS</span></tt></a> constant. The default
+is <tt class="docutils literal"><span class="pre">;</span></tt>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="oyster.Chain.insert">
+<tt class="descclassname">Chain.</tt><tt class="descname">insert</tt><big>(</big><em>index</em>, <em>command</em><span class="optional">[</span>, <em>chained_by=';'</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#oyster.Chain.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert given <tt class="docutils literal"><span class="pre">command</span></tt> to the chain at <tt class="docutils literal"><span class="pre">index</span></tt> with the
+<tt class="docutils literal"><span class="pre">chained_by</span></tt> as the separating control operator.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>index</strong> &#8211; At which index of the chain to insert the command</li>
+<li><strong>command</strong> &#8211; A string representing the command or an
+instance of <a class="reference internal" href="#oyster.Command" title="oyster.Command"><tt class="xref py py-class docutils literal"><span class="pre">Command</span></tt></a></li>
+<li><strong>chained_by</strong> &#8211; One of the control operators defined in the
+<a class="reference internal" href="#oyster.CONTROL_OPERATORS" title="oyster.CONTROL_OPERATORS"><tt class="xref py py-attr docutils literal"><span class="pre">CONTROL_OPERATORS</span></tt></a> constant. The default
+is <tt class="docutils literal"><span class="pre">;</span></tt>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="oyster.Chain.index">
+<tt class="descclassname">Chain.</tt><tt class="descname">index</tt><big>(</big><em>command</em><span class="optional">[</span>, <em>start</em><span class="optional">[</span>, <em>stop</em><span class="optional">]</span><span class="optional">]</span><big>)</big> &rarr; first index of command.<a class="headerlink" href="#oyster.Chain.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raises ValueError if the command is not present.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>command</strong> &#8211; A string representing the command or an
+instance of <a class="reference internal" href="#oyster.Command" title="oyster.Command"><tt class="xref py py-class docutils literal"><span class="pre">Command</span></tt></a></li>
+<li><strong>start</strong> &#8211; At which index to start the search</li>
+<li><strong>stop</strong> &#8211; At which index to stop the search</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="oyster.Chain.pop">
+<tt class="descclassname">Chain.</tt><tt class="descname">pop</tt><big>(</big><span class="optional">[</span><em>index</em><span class="optional">]</span><big>)</big> &rarr; command -- remove and return item at index (default last).<a class="headerlink" href="#oyster.Chain.pop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raises IndexError if list is empty or index is out of range.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; Which command to pop by index</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="oyster.Chain.remove">
+<tt class="descclassname">Chain.</tt><tt class="descname">remove</tt><big>(</big><em>command</em><big>)</big><a class="headerlink" href="#oyster.Chain.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>C.remove(command) &#8211; remove first occurrence of command.</p>
+<p>Raises ValueError if the value is not present.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>command</strong> &#8211; A string representing the command or an
+instance of <a class="reference internal" href="#oyster.Command" title="oyster.Command"><tt class="xref py py-class docutils literal"><span class="pre">Command</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="commands">
+<h1>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="oyster.Command">
+<em class="property">class </em><tt class="descclassname">oyster.</tt><tt class="descname">Command</tt><big>(</big><em>tokens</em><big>)</big><a class="headerlink" href="#oyster.Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>A representation of a single - unchained - command.</p>
+<p>Contains the name of the program being executed along with all the
+arguments passed to it. Furthermore, it processes the given arguments
+to convert them into <tt class="docutils literal"><span class="pre">options</span></tt>: A dictionary mapping options to their
+given values.</p>
+<p>An argument is considered an option in case it is prefixed with <tt class="docutils literal"><span class="pre">-</span></tt>.
+In other words <tt class="docutils literal"><span class="pre">-v</span></tt>, <tt class="docutils literal"><span class="pre">--install</span></tt> and <tt class="docutils literal"><span class="pre">-c</span></tt> are all considered
+to be options.</p>
+<p><strong>Caveat #1:</strong></p>
+<p>How their values are retrieved is an interesting topic. The easiest case
+is the scenario of an argument being &#8211;foo=bar. Then the option name is
+<tt class="docutils literal"><span class="pre">foo</span></tt> and its corresponding value <tt class="docutils literal"><span class="pre">bar</span></tt>. Single-hyphenated arguments
+is a trickier matter though. Consider the following:</p>
+<blockquote>
+<div>pip install -v -r requirements.txt</div></blockquote>
+<p>In the case above Oyster will treat the <tt class="docutils literal"><span class="pre">-v</span></tt> argument as a boolean
+option, i.e giving it a value of <tt class="docutils literal"><span class="pre">True</span></tt>. In case all single-hyphenated
+arguments would be considered boolean options then, everyone who knows
+pip, will know that the stored value would be useless &amp; incorrect.</p>
+<p>Therefore, in the case a single-hypenhated argument is followed by a
+non-hypenated argument the latter is considered the formers value.
+Naturally, this is not bulletproof neither, but it is better to be
+more greedy in this scenario since the arguments are also kept, untouched,
+in the <a class="reference internal" href="#oyster.Command.arguments" title="oyster.Command.arguments"><tt class="xref py py-attr docutils literal"><span class="pre">arguments</span></tt></a> attribute. After all: Determening how the
+arguments should be handled is ultimately up to the targetted
+program in the command.</p>
+<p><strong>Caveat #2:</strong></p>
+<p>The <a class="reference internal" href="#oyster.Command.as_string" title="oyster.Command.as_string"><tt class="xref py py-attr docutils literal"><span class="pre">as_string</span></tt></a> and thus str(self) value is retrieved using
+the <tt class="docutils literal"><span class="pre">subprocess.list2cmdline</span></tt> function. In case the command is retrieved
+via <a class="reference internal" href="#oyster.parse" title="oyster.parse"><tt class="xref py py-func docutils literal"><span class="pre">parse()</span></tt></a> this opens up for the possibility of minor differences
+in how command arguments are quoted. Therefore, a direct comparison
+of the input command and the string representation of its instance
+is not guaranteed to be successful.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>tokens</strong> &#8211; A list of all the tokens the command consists of</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oyster.Command.program">
+<tt class="descclassname">Command.</tt><tt class="descname">program</tt><em class="property"> = None</em><a class="headerlink" href="#oyster.Command.program" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the program which the command is executing</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oyster.Command.arguments">
+<tt class="descclassname">Command.</tt><tt class="descname">arguments</tt><em class="property"> = None</em><a class="headerlink" href="#oyster.Command.arguments" title="Permalink to this definition">¶</a></dt>
+<dd><p>A tuple of all the arguments passed to the program</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oyster.Command.tokens">
+<tt class="descclassname">Command.</tt><tt class="descname">tokens</tt><em class="property"> = None</em><a class="headerlink" href="#oyster.Command.tokens" title="Permalink to this definition">¶</a></dt>
+<dd><p>A tuple containing all tokens which the command consists of.
+In other words: tuple([self.program] + list(self.arguments))</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oyster.Command.as_string">
+<tt class="descclassname">Command.</tt><tt class="descname">as_string</tt><em class="property"> = None</em><a class="headerlink" href="#oyster.Command.as_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>The string representation of the command. Used in str(self)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oyster.Command.redirects">
+<tt class="descclassname">Command.</tt><tt class="descname">redirects</tt><em class="property"> = None</em><a class="headerlink" href="#oyster.Command.redirects" title="Permalink to this definition">¶</a></dt>
+<dd><p>A tuple containing all the instances of <a class="reference internal" href="#oyster.Redirect" title="oyster.Redirect"><tt class="xref py py-class docutils literal"><span class="pre">Redirect</span></tt></a>
+found during processing of the command.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oyster.Command.get_options">
+<tt class="descclassname">Command.</tt><tt class="descname">get_options</tt><big>(</big><big>)</big><a class="headerlink" href="#oyster.Command.get_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a copy of the command options.</p>
+<p>A copy is returned to prevent tampering with the instance options.
+The <a class="reference internal" href="#oyster.Command" title="oyster.Command"><tt class="xref py py-class docutils literal"><span class="pre">Command</span></tt></a> class is not designed to support mutations.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oyster.Command.has_option">
+<tt class="descclassname">Command.</tt><tt class="descname">has_option</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#oyster.Command.has_option" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether the command includes the given option <tt class="docutils literal"><span class="pre">name</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> &#8211; Name of the option including hyphens.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="oyster.Command.get_option_values">
+<tt class="descclassname">Command.</tt><tt class="descname">get_option_values</tt><big>(</big><em>name</em>, <em>*args</em><big>)</big><a class="headerlink" href="#oyster.Command.get_option_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>D.get(k[,d]) -&gt; D[k] if k in D, else d.  d defaults to None.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> &#8211; Name of the option including hyphens.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="oyster.Command.get_option_count">
+<tt class="descclassname">Command.</tt><tt class="descname">get_option_count</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#oyster.Command.get_option_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the amount of values stored for the given options.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> &#8211; Name of the option including hyphens.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="redirects">
+<h1>Redirects<a class="headerlink" href="#redirects" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="oyster.Redirect">
+<em class="property">class </em><tt class="descclassname">oyster.</tt><tt class="descname">Redirect</tt><big>(</big><em>source</em>, <em>destination</em>, <em>mode='w'</em><big>)</big><a class="headerlink" href="#oyster.Redirect" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#oyster.Redirect" title="oyster.Redirect"><tt class="xref py py-class docutils literal"><span class="pre">Redirect</span></tt></a> instance represents the various output redirections
+performed by the command it is attached to.</p>
+<p>Each redirect has a <a class="reference internal" href="#oyster.Redirect.source" title="oyster.Redirect.source"><tt class="xref py py-attr docutils literal"><span class="pre">source</span></tt></a> and <a class="reference internal" href="#oyster.Redirect.destination" title="oyster.Redirect.destination"><tt class="xref py py-attr docutils literal"><span class="pre">destination</span></tt></a> in which the
+source is the value of the standard file descriptor to be redirected to
+the given <a class="reference internal" href="#oyster.Redirect.destination" title="oyster.Redirect.destination"><tt class="xref py py-attr docutils literal"><span class="pre">destination</span></tt></a> - which can be either a
+file descriptor or a filename.</p>
+<p>The method in which the redirect is performed is determined by the
+<a class="reference internal" href="#oyster.Redirect.mode" title="oyster.Redirect.mode"><tt class="xref py py-attr docutils literal"><span class="pre">mode</span></tt></a> which can be either <tt class="docutils literal"><span class="pre">w</span></tt> or <tt class="docutils literal"><span class="pre">a</span></tt>. The <tt class="docutils literal"><span class="pre">w</span></tt> mode will
+write to the <a class="reference internal" href="#oyster.Redirect.destination" title="oyster.Redirect.destination"><tt class="xref py py-attr docutils literal"><span class="pre">destination</span></tt></a> while <tt class="docutils literal"><span class="pre">a</span></tt> will append to
+it, i.e &#8216;&gt;&#8217; vs. &#8216;&gt;&gt;&#8217;.</p>
+<p>When a shell command is parsed all redirects will automatically be
+initiated and assigned to their respective command as shown below:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">oyster</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cmd</span> <span class="o">=</span> <span class="s">&#39;cp -v -r myfiles/* &gt;&gt; copied.log 2&gt;&gt; errors.log&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">command</span> <span class="o">=</span> <span class="n">oyster</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">cmd</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">command</span><span class="o">.</span><span class="n">redirects</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">&#39;&gt;&gt; copied.log&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">command</span><span class="o">.</span><span class="n">redirects</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">&#39;2&gt;&gt; errors.log&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">command</span><span class="o">.</span><span class="n">redirects</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_source_stdout</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>source</strong> &#8211; An integer representing the standard file descriptor to
+be redirected.</li>
+<li><strong>destination</strong> &#8211; Either an integer representing the standard file
+descriptor which output should be redirected to or
+a string representing the filename.</li>
+<li><strong>mode</strong> &#8211; Either <tt class="docutils literal"><span class="pre">w</span></tt> or <tt class="docutils literal"><span class="pre">a</span></tt> depending on whether the redirect should
+write or append its output to the <a class="reference internal" href="#oyster.Redirect.destination" title="oyster.Redirect.destination"><tt class="xref py py-attr docutils literal"><span class="pre">destination</span></tt></a>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oyster.Redirect.source">
+<tt class="descclassname">Redirect.</tt><tt class="descname">source</tt><em class="property"> = None</em><a class="headerlink" href="#oyster.Redirect.source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Which standard file descriptor to be redirected</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oyster.Redirect.destination">
+<tt class="descclassname">Redirect.</tt><tt class="descname">destination</tt><em class="property"> = None</em><a class="headerlink" href="#oyster.Redirect.destination" title="Permalink to this definition">¶</a></dt>
+<dd><p>The destination of the redirect which can either be a standard
+file descriptor (integer) or a filename (string.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oyster.Redirect.mode">
+<tt class="descclassname">Redirect.</tt><tt class="descname">mode</tt><em class="property"> = None</em><a class="headerlink" href="#oyster.Redirect.mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>The mode in which the redirect should be performed.
+<tt class="docutils literal"><span class="pre">w</span></tt> represents writes (&gt;) &amp; <tt class="docutils literal"><span class="pre">a</span></tt> represents appends (&gt;&gt;).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oyster.Redirect.is_source_stdin">
+<tt class="descclassname">Redirect.</tt><tt class="descname">is_source_stdin</tt><big>(</big><big>)</big><a class="headerlink" href="#oyster.Redirect.is_source_stdin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the source is the standard input file descriptor.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oyster.Redirect.is_source_stdout">
+<tt class="descclassname">Redirect.</tt><tt class="descname">is_source_stdout</tt><big>(</big><big>)</big><a class="headerlink" href="#oyster.Redirect.is_source_stdout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the source is the standard output file descriptor.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oyster.Redirect.is_source_stderr">
+<tt class="descclassname">Redirect.</tt><tt class="descname">is_source_stderr</tt><big>(</big><big>)</big><a class="headerlink" href="#oyster.Redirect.is_source_stderr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the source is the standard error file descriptor.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oyster.Redirect.is_destination_stdfd">
+<tt class="descclassname">Redirect.</tt><tt class="descname">is_destination_stdfd</tt><big>(</big><big>)</big><a class="headerlink" href="#oyster.Redirect.is_destination_stdfd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the destination is a standard file descriptor.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oyster.Redirect.is_destination_stdin">
+<tt class="descclassname">Redirect.</tt><tt class="descname">is_destination_stdin</tt><big>(</big><big>)</big><a class="headerlink" href="#oyster.Redirect.is_destination_stdin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the destination is the standard input file descriptor.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oyster.Redirect.is_destination_stdout">
+<tt class="descclassname">Redirect.</tt><tt class="descname">is_destination_stdout</tt><big>(</big><big>)</big><a class="headerlink" href="#oyster.Redirect.is_destination_stdout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the destination is the standard output file descriptor.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oyster.Redirect.is_destination_stderr">
+<tt class="descclassname">Redirect.</tt><tt class="descname">is_destination_stderr</tt><big>(</big><big>)</big><a class="headerlink" href="#oyster.Redirect.is_destination_stderr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the destination is the standard error file descriptor.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="functions">
+<h1>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="oyster.parse">
+<tt class="descclassname">oyster.</tt><tt class="descname">parse</tt><big>(</big><em>string</em><big>)</big><a class="headerlink" href="#oyster.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse given <tt class="docutils literal"><span class="pre">string</span></tt> into a <a class="reference internal" href="#oyster.Chain" title="oyster.Chain"><tt class="xref py py-class docutils literal"><span class="pre">Chain</span></tt></a> of <a class="reference internal" href="#oyster.Command" title="oyster.Command"><tt class="xref py py-class docutils literal"><span class="pre">Command</span></tt></a> s.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">oyster</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cmd</span> <span class="o">=</span> <span class="s">&#39;pip search -vvv --timeout=5 flask | grep session | less&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chain</span> <span class="o">=</span> <span class="n">oyster</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pip</span><span class="p">,</span> <span class="n">grep</span><span class="p">,</span> <span class="n">less</span> <span class="o">=</span> <span class="n">chain</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pip</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="s">&#39;--timeout&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pip</span><span class="o">.</span><span class="n">get_option_values</span><span class="p">(</span><span class="s">&#39;--timeout&#39;</span><span class="p">)</span>
+<span class="go">[&#39;5&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pip</span><span class="o">.</span><span class="n">get_option_count</span><span class="p">(</span><span class="s">&#39;-v&#39;</span><span class="p">)</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pip</span><span class="o">.</span><span class="n">arguments</span>
+<span class="go">(&#39;search&#39;, &#39;--timeout=5&#39;, &#39;flask&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">grep</span><span class="p">)</span>
+<span class="go">&#39;grep session&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">less</span><span class="p">)</span>
+<span class="go">&#39;less&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chain</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;less&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
+<span class="go">&#39;pip search -vvv --timeout=5 flask | grep session&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chain</span> <span class="o">+=</span> <span class="s">&#39;date -u&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
+<span class="go">&#39;pip search -vvv --timeout=5 flask | grep session; date -u&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">utc_date</span> <span class="o">=</span> <span class="n">chain</span><span class="p">[</span><span class="n">chain</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s">&#39;date -u&#39;</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">utc_date</span><span class="p">)</span>
+<span class="go">&#39;date -u&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">utc_date</span><span class="o">.</span><span class="n">get_option_values</span><span class="p">(</span><span class="s">&#39;-u&#39;</span><span class="p">)</span>
+<span class="go">[True]</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>string</strong> &#8211; The string, i.e command, to parse</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="oyster.is_comment">
+<tt class="descclassname">oyster.</tt><tt class="descname">is_comment</tt><big>(</big><em>string</em><big>)</big><a class="headerlink" href="#oyster.is_comment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether given string is considered to be a comment.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>string</strong> &#8211; The string, i.e command, to check</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="oyster.is_script">
+<tt class="descclassname">oyster.</tt><tt class="descname">is_script</tt><big>(</big><em>string</em><big>)</big><a class="headerlink" href="#oyster.is_script" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether given string is considered to be a script.</p>
+<p>This function oversimplifies what a shell script is, but covers
+the necessary basics for this module.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>string</strong> &#8211; The string, i.e command, to check</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="oyster.is_quoted">
+<tt class="descclassname">oyster.</tt><tt class="descname">is_quoted</tt><big>(</big><em>string</em><big>)</big><a class="headerlink" href="#oyster.is_quoted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether given string is quoted.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>string</strong> &#8211; The string, i.e command, to check</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="oyster.is_command">
+<tt class="descclassname">oyster.</tt><tt class="descname">is_command</tt><big>(</big><em>string</em>, <em>tokens=None</em><big>)</big><a class="headerlink" href="#oyster.is_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether given string is considered to be a command.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>string</strong> &#8211; The string, i.e command, to check</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="oyster.tokenize">
+<tt class="descclassname">oyster.</tt><tt class="descname">tokenize</tt><big>(</big><em>string</em><big>)</big><a class="headerlink" href="#oyster.tokenize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tokenize given <tt class="docutils literal"><span class="pre">string</span></tt> and return a list containing all the tokens.</p>
+<p>The workhorse behind this function is the <tt class="docutils literal"><span class="pre">shlex</span></tt> module. However, tokens
+found via <tt class="docutils literal"><span class="pre">shlex</span></tt> are processed to ensure we handle command substitutions
+along with chained commands properly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Paramter string:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">The command - as a string - to tokenize</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="oyster.split_token_by_operators">
+<tt class="descclassname">oyster.</tt><tt class="descname">split_token_by_operators</tt><big>(</big><em>token</em><big>)</big><a class="headerlink" href="#oyster.split_token_by_operators" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split the given <tt class="docutils literal"><span class="pre">token</span></tt> by all containing <a class="reference internal" href="#oyster.CONTROL_OPERATORS" title="oyster.CONTROL_OPERATORS"><tt class="xref py py-attr docutils literal"><span class="pre">CONTROL_OPERATORS</span></tt></a>.</p>
+<p>Each unquoted token longer than a single character is required to do this
+during tokenization of a command. Otherwise, commands which are not
+properly spaced will be treated incorrectly. As illustrated below:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">shlex</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">oyster</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cmd</span> <span class="o">=</span> <span class="s">&#39;cd /some/path;ls&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tokens</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">posix</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tokens</span>
+<span class="go">[&#39;cd&#39;, &#39;/some/path;ls&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">processed</span> <span class="o">=</span> <span class="n">oyster</span><span class="o">.</span><span class="n">split_token_by_operators</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">processed</span>
+<span class="go">[&#39;/some/path&#39;, &#39;;&#39;, &#39;ls&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tokens</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">processed</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tokens</span>
+<span class="go">[&#39;cd&#39;, &#39;/some/path&#39;, &#39;;&#39;, &#39;ls&#39;]</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>token</strong> &#8211; The token to check for control operators</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 
 
@@ -73,11 +662,12 @@
         <div class="sphinxsidebarwrapper">
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Welcome to Oyster&#8217;s documentation!</a><ul>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-oyster">Constants</a></li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+<li><a class="reference internal" href="#">Oyster</a></li>
+<li><a class="reference internal" href="#constants">Constants</a></li>
+<li><a class="reference internal" href="#chains">Chains</a></li>
+<li><a class="reference internal" href="#commands">Commands</a></li>
+<li><a class="reference internal" href="#redirects">Redirects</a></li>
+<li><a class="reference internal" href="#functions">Functions</a></li>
 </ul>
 
   <h3>This Page</h3>
