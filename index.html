@@ -20,14 +20,146 @@
                 allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
 
         <div id="readme">
-            <h1>oyster</h1>
+            <h1>Oyster: Get 'em pearls</h1>
 
-<h2>Gotchas to bring up</h2>
+<p>Oyster is a Python module for parsing shell commands. Unlike awesome modules such as docopt, optparse &amp; argpare the
+primary intention of Oyster is not to parse the arguments passed to a single application - although it is capable of that too.
+The main objective is rather to parse any given shell command whether it be a chain of multiple commands or not.</p>
 
 <ul>
-<li>get<em>option</em>values always returns a list</li>
-<li>curl -v http://localhost:8000 (-v will have the URL as value)</li>
+<li><a href="#demo">Demo</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#development">Development</a></li>
+<li><a href="#features">Features</a>
+<ul>
+<li><a href="#chains">Chains</a></li>
+<li><a href="#commands">Commands</a></li>
+<li><a href="#redirects">Redirects</a></li>
+</ul></li>
+<li><a href="#caveats">Caveats</a></li>
+<li><a href="#documentation">Documentation</a></li>
+<li><a href="#license">License</a></li>
 </ul>
+
+<h2>Demo</h2>
+
+<p>```python
+import oyster</p>
+
+<p>chain = oyster.parse('pip search -vvv --timeout=5 flask | grep session | less')
+print len(chain)  # ==&gt; 3</p>
+
+<p>pip, grep, less = chain</p>
+
+<p>print pip.has<em>option('--timeout')  # ==&gt; True
+print pip.get</em>option<em>values('--timeout')  # ==&gt; ['5']
+print pip.get</em>option_count('-v')  # ==&gt; 3
+print pip.arguments  # ==&gt; ('search', '--timeout=5', 'flask')</p>
+
+<p>print grep  # ==&gt; 'grep session'
+print less  # ==&gt; 'less'</p>
+
+<p>chain.remove('less')
+print chain  # ==&gt; 'pip search -vvv --timeout=5 flask | grep session'</p>
+
+<p>chain += 'date -u'
+print chain  # ==&gt; 'pip search -vvv --timeout=5 flask | grep session; date -u'
+utc<em>date = chain[chain.index('date -u')]
+print utc</em>date  # ==&gt; 'date -u'
+print utc<em>date.get</em>option_values('-u')  # ==&gt; [True]</p>
+
+<p>```</p>
+
+<h2>Installation</h2>
+
+<p>Installation instructions coming soon once the <code>setup.py</code> has been written.</p>
+
+<h2>Development</h2>
+
+<p>Want to help out? Awesome! Here is what you need to do:</p>
+
+<p><strong>Fork the repository</strong></p>
+
+<p><strong>Clone the repository</strong></p>
+
+<pre><code>git clone git@github.com:&lt;your_github_username&gt;/oyster.git ~/your/dev/env/oyster
+</code></pre>
+
+<p><strong>Create a virtual environment for Oystr</strong></p>
+
+<pre><code>mkvirtualenv oyster
+cd ~/your/dev/env/oyster
+pip install -r development-requirements.txt
+</code></pre>
+
+<p><strong>Run the tests</strong></p>
+
+<pre><code>python tests.py
+</code></pre>
+
+<p><strong>Submit a pull-request:</strong>
+Once you are done - all you need to do is follow the standard procedure for creating a pull-request. Thanks in advance!</p>
+
+<h2>Features</h2>
+
+<p>####Chains:
+```python
+import oyster</p>
+
+<p>chain = oyster.parse('cat /var/log/system.log | grep kernel &gt;&gt; system<em>kernel.log 2>&gt; errors.log')
+cat, grep = chain
+print cat  # ==&gt; 'cat /var/log/system.log'
+print grep  # ==&gt; 'grep kernel &gt;&gt; system</em>kernel.log 2>&gt; errors.log'</p>
+
+<p>```</p>
+
+<p>####Commands:
+```python
+import oyster</p>
+
+<p>command = oyster.Command(['cat', '-n', 'foo.txt'])
+print command  # ==&gt; 'cat -n foo.txt'
+print command.program  # ==&gt; 'cat'
+print command.arguments  # ==&gt; ('-n', 'foo.txt')
+print command.has<em>option('-n')  # ==&gt; True
+print command.get</em>option<em>values('-n')  # ==&gt; ['foo.txt']  (See "Caveats" about this)
+print command.get</em>option<em>count('-n')  # ==&gt; 1
+print command.get</em>options()  # ==&gt; {'-n': ['foo.txt']}  (See "Caveats" about this)
+```</p>
+
+<p>####Redirects:</p>
+
+<p>```python
+import oyster</p>
+
+<p>chain = oyster.parse('cat /var/log/system.log | grep kernel &gt;&gt; system<em>kernel.log 2>&gt; errors.log')
+print chain[0].redirects  # ==&gt; ()
+print chain[1].redirects[0]  # ==&gt; &gt;&gt; system</em>kernel.log
+print chain[1].redirects[0].source == oyster.STDOUT  # ==&gt; True
+print chain[1].redirects[0].destination == 'system<em>kernel.log'  # ==&gt; True
+print chain[1].redirects[0].mode  # ==&gt; 'a'
+print chain[1].redirects[1]  # ==&gt; 2>&gt; errors.log
+print chain[1].redirects[1].is</em>source<em>stderr()  # ==&gt; True
+print chain[1].redirects[1].is</em>destination_stdfd()  # ==&gt; False</p>
+
+<p>```</p>
+
+<h2>Caveats</h2>
+
+<ul>
+<li>The string passed to <code>oyster.parse</code> can differ from <code>str(command)</code> since the latter is generated using <code>subprocess.list2cmdline</code> which can cause different quotations.</li>
+<li><code>Command(['cat', '-n', 'foo.txt']).get_option_values('-n')</code> will always return a <code>list</code> since options can be repeated.</li>
+<li><code>Command(['curl', '-v', 'http://localhost']).get_option_values('-v')</code> will return <code>['http://localhost']</code>. Whether this is true or not is up to the program executed, i.e <code>curl</code> in this instance.</li>
+</ul>
+
+<h2>Documentation</h2>
+
+<p>The Oyster documentation is available <a href="http://birknilson.github.io/oyster/documentation/">here</a>.
+Currently, this is a work in progress and a complete documentation will be available within a few days.</p>
+
+<h2>License</h2>
+
+<p>Oyster is licensed under a three clause BSD License which can read in the included <a href="https://github.com/birknilson/oyster/blob/master/LICENSE">LICENSE</a> file.</p>
 
         </div>
 
