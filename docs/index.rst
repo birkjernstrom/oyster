@@ -11,6 +11,11 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+Constants
+==================================
+
+.. automodule:: oyster
+.. autodata:: RESERVED_WORDS, CONTROL_OPERATORS, STDIN, STDOUT, STDERR, STDFD_MAPPING
 
 
 Indices and tables

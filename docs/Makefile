@@ -6,6 +6,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
+SERVE_PORT    = 8080
 
 # User-friendly check for sphinx-build
 ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
@@ -45,9 +46,15 @@ help:
 	@echo "  pseudoxml  to make pseudoxml-XML files for display purposes"
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
+	@echo "  serve      serve generated HTML"
 
 clean:
 	rm -rf $(BUILDDIR)/*
+
+serve:
+	@echo "Serving HTML files at: http://localhost:$(SERVE_PORT)"
+	@cd $(BUILDDIR)/html; \
+		python -m SimpleHTTPServer $(SERVE_PORT) 2>&1 > /dev/null
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
