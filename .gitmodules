@@ -1,0 +1,3 @@
+[submodule "vendor/website"]
+	path = vendor/website
+	url = git@github.com:birknilson/oyster.git
