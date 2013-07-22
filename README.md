@@ -6,6 +6,8 @@ primary intention of Oyster is not to parse the arguments passed to a single app
 The main objective is rather to parse any given shell command whether it be a chain of multiple commands or not.
 
   - [Demo](#demo)
+  - [Installation](#installation)
+  - [Development](#development)
   - [Features](#features)
     - [Chains](#chains)
     - [Commands](#commands)
@@ -42,6 +44,33 @@ print utc_date  # ==> 'date -u'
 print utc_date.get_option_values('-u')  # ==> [True]
 
 ```
+
+## Installation
+
+Installation instructions coming soon once the ``setup.py`` has been written.
+
+## Development
+
+Want to help out? Awesome! Here is what you need to do:
+
+**Fork the repository**
+
+**Clone the repository**
+
+    git clone git@github.com:<your_github_username>/oyster.git ~/your/dev/env/oyster
+    
+**Create a virtual environment for Oystr**
+
+    mkvirtualenv oyster
+    cd ~/your/dev/env/oyster
+    pip install -r development-requirements.txt
+
+**Run the tests**
+
+    python tests.py
+    
+**Submit a pull-request:**
+Once you are done - all you need to do is follow the standard procedure for creating a pull-request. Thanks in advance!
 
 ## Features
 
