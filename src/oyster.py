@@ -113,6 +113,9 @@ class Chain(object):
         del self._operators[index]
 
     def __add__(self, chain):
+        if hasattr(chain, 'isalpha'):
+            chain = parse(chain)
+
         c = Chain()
         c.commands = self.commands + chain.commands
         c._strings = self._strings + chain._strings
@@ -120,6 +123,9 @@ class Chain(object):
         return c
 
     def __iadd__(self, chain):
+        if hasattr(chain, 'isalpha'):
+            chain = parse(chain)
+
         self.commands += chain.commands
         self._strings += chain._strings
         self._operators += chain._operators
