@@ -34,6 +34,55 @@ print utc_date.get_option_values('-u')  # ==> [True]
 
 ```
 
+## Features
+
+**Commands:**
+```python
+import oyster
+
+command = oyster.Command(['cat', '-n', 'foo.txt'])
+print command  # ==> 'cat -n foo.txt'
+print command.program  # ==> 'cat'
+print command.arguments  # ==> ('-n', 'foo.txt')
+print command.has_option('-n')  # ==> True
+print command.get_option_values('-n')  # ==> ['foo.txt']  (See "Caveats" about this)
+print command.get_option_count('-n')  # ==> 1
+print command.get_options()  # ==> {'-n': ['foo.txt']}  (See "Caveats" about this)
+```
+
+**Redirects:**
+
+```python
+import oyster
+
+chain = oyster.parse('cat /var/log/system.log | grep kernel >> system_kernel.log 2>> errors.log')
+print chain[0].redirects  # ==> ()
+print chain[1].redirects[0]  # ==> >> system_kernel.log
+print chain[1].redirects[0].source == oyster.STDOUT  # ==> True
+print chain[1].redirects[0].destination == 'system_kernel.log'  # ==> True
+print chain[1].redirects[0].mode  # ==> 'a'
+print chain[1].redirects[1]  # ==> 2>> errors.log
+print chain[1].redirects[1].is_source_stderr()  # ==> True
+print chain[1].redirects[1].is_destination_stdfd()  # ==> False
+
+```
+
+**Chains:**
+```python
+import oyster
+
+chain = oyster.parse('cat /var/log/system.log | grep kernel >> system_kernel.log 2>> errors.log')
+cat, grep = chain
+print cat  # ==> 'cat /var/log/system.log'
+print grep  # ==> 'grep kernel >> system_kernel.log 2>> errors.log'
+
+```
+
+
+## License
+
+Oyster is licensed under a three clause BSD License which can read in the included [LICENSE](https://github.com/birknilson/oyster/blob/master/LICENSE) file.
+
 ## Gotchas to bring up
 
 - get_option_values always returns a list
