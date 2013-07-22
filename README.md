@@ -1,4 +1,4 @@
-Oyster
+Oyster: Get 'em pearls
 =======
 
 Oyster is a Python module for parsing shell commands. Unlike awesome modules such as docopt, optparse & argpare the
