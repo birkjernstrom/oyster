@@ -36,6 +36,24 @@
 import shlex
 from subprocess import list2cmdline
 
+__author__ = 'Birk Nilson <birk@tictail.com>'
+__copyright__ = "Copyright 2013, Birk Nilson"
+__license__ = 'BSD'
+__version__ = '0.1.0'
+__all__ = [
+    # Constants
+    'RESERVED_WORDS', 'CONTROL_OPERATORS', 'STDIN',
+    'STDOUT', 'STDERR', 'STDFD_MAPPING',
+
+    # Classes
+    'Redirect', 'Chain', 'Command',
+
+    # Functions
+    'split_token_by_operators', 'tokenize', 'is_comment',
+    'is_script', 'is_quoted', 'is_command', 'parse',
+]
+
+
 #: Set of words which are reserved in the shell.
 #: See: http://bit.ly/1baSfhM#tag_02_04
 RESERVED_WORDS = frozenset([
