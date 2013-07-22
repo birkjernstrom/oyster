@@ -5,7 +5,16 @@ Oyster is a Python module for parsing shell commands. Unlike awesome modules suc
 primary intention of Oyster is not to parse the arguments passed to a single application - although it is capable of that too.
 The main objective is rather to parse any given shell command whether it be a chain of multiple commands or not.
 
-Let's see a demo:
+  - [Demo](#demo)
+  - [Features](#features)
+    - [Chains](#chains)
+    - [Commands](#commands)
+    - [Redirects](#redirects)
+  - [Caveats](#caveats)
+  - [Documentation](#documentation)
+  - [License](#license)
+
+## Demo
 
 ```python
 import oyster
@@ -36,7 +45,18 @@ print utc_date.get_option_values('-u')  # ==> [True]
 
 ## Features
 
-**Commands:**
+####Chains:
+```python
+import oyster
+
+chain = oyster.parse('cat /var/log/system.log | grep kernel >> system_kernel.log 2>> errors.log')
+cat, grep = chain
+print cat  # ==> 'cat /var/log/system.log'
+print grep  # ==> 'grep kernel >> system_kernel.log 2>> errors.log'
+
+```
+
+####Commands:
 ```python
 import oyster
 
@@ -50,7 +70,7 @@ print command.get_option_count('-n')  # ==> 1
 print command.get_options()  # ==> {'-n': ['foo.txt']}  (See "Caveats" about this)
 ```
 
-**Redirects:**
+####Redirects:
 
 ```python
 import oyster
@@ -67,23 +87,18 @@ print chain[1].redirects[1].is_destination_stdfd()  # ==> False
 
 ```
 
-**Chains:**
-```python
-import oyster
+## Caveats
 
-chain = oyster.parse('cat /var/log/system.log | grep kernel >> system_kernel.log 2>> errors.log')
-cat, grep = chain
-print cat  # ==> 'cat /var/log/system.log'
-print grep  # ==> 'grep kernel >> system_kernel.log 2>> errors.log'
+  - The string passed to ``oyster.parse`` can differ from ``str(command)`` since the latter is generated using ``subprocess.list2cmdline`` which can cause different quotations.
+  - ``Command(['cat', '-n', 'foo.txt']).get_option_values('-n')`` will always return a ``list`` since options can be repeated.
+  - ``Command(['curl', '-v', 'http://localhost']).get_option_values('-v')`` will return ``['http://localhost']``. Whether this is true or not is up to the program executed, i.e ``curl`` in this instance.
 
-```
 
+## Documentation
+
+The Oyster documentation is available [here](http://birknilson.github.io/oyster/documentation/).
+Currently, this is a work in progress and a complete documentation will be available within a few days.
 
 ## License
 
 Oyster is licensed under a three clause BSD License which can read in the included [LICENSE](https://github.com/birknilson/oyster/blob/master/LICENSE) file.
-
-## Gotchas to bring up
-
-- get_option_values always returns a list
-- curl -v http://localhost:8000 (-v will have the URL as value)
