@@ -43,7 +43,7 @@ __version__ = '0.1.0'
 __all__ = [
     # Constants
     'RESERVED_WORDS', 'CONTROL_OPERATORS', 'STDIN',
-    'STDOUT', 'STDERR', 'STDFD_MAPPING',
+    'STDOUT', 'STDERR', 'STDFD_MAPPING', 'DEBUG',
 
     # Classes
     'Redirect', 'Chain', 'Command',
@@ -53,6 +53,11 @@ __all__ = [
     'is_script', 'is_quoted', 'is_command', 'parse',
 ]
 
+#: How verbose Oyster debugging should be::
+#:     * 0 turns of debugging
+#:     * 1 adds basic parse debugging
+#:     * 2 adds tokenize debugging
+DEBUG = 1
 
 #: Set of words which are reserved in the shell.
 #: See: http://bit.ly/1baSfhM#tag_02_04
@@ -65,6 +70,9 @@ RESERVED_WORDS = frozenset([
 
 #: Control operators which chain multiple commands
 CONTROL_OPERATORS = frozenset([';', '|', '&&', '||'])
+
+#: Lookup dictionary of control operators
+CONTROL_OPERATOR_LOOKUP = dict(zip(CONTROL_OPERATORS, CONTROL_OPERATORS))
 
 #: The file descriptor of the standard input file
 STDIN = 0
@@ -548,6 +556,19 @@ class Command(object):
         self._options = options
 
 
+
+def debug(message, level=1, exit=False):
+    if DEBUG >= level:
+        print message
+
+
+def debug_section(key, value, level=1):
+    debug("""
+    %(key)s:
+        %(value)s
+    """ % dict(key=key.upper(), value=value))
+
+
 def split_token_by_operators(token):
     """Split the given ``token`` by all containing :attr:`CONTROL_OPERATORS`.
 
@@ -642,24 +663,30 @@ def tokenize(string):
 
     while True:
         token = lex.get_token()
+        title = '[TOKEN | IN SUBSTITUTION]' if in_substitution else '[TOKEN]'
+        debug_section(title, token, level=2)
         if token is None:
+            debug('- Abort. Empty token', level=2)
             break
 
         if in_substitution:
             substitution_tokens.append(token)
             if token.endswith(substitution_closer):
+                debug('- Command substitution closed.')
                 processed.append(''.join(substitution_tokens))
                 substitution_tokens = []
                 in_substitution = False
             continue
 
         if token.startswith('$('):
+            debug('- Command substitution detected using $(', level=2)
             in_substitution = True
             substitution_closer = ')'
             substitution_tokens.append(token)
             continue
 
         if token.startswith('`'):
+            debug('- Command substitution detected using `', level=2)
             in_substitution = True
             substitution_closer = '`'
             substitution_tokens.append(token)
@@ -763,30 +790,44 @@ def parse(string):
 
     :param string: The string, i.e command, to parse
     """
-    chain = Chain()
-    if not (string or hasattr(string, 'isalpha')):
-        return chain
+    try:
+        chain = Chain()
+        string = string.strip()
 
-    tokens = tokenize(string)
-    if not is_command(string, tokens):
-        return chain
+        if DEBUG:
+            print '**********************************************************'
+        debug_section('String to parse', string)
 
-    chained_by = None
-    command_tokens = []
-    to_parse = tokens + [';']
-    control_operator_lookup = dict(zip(CONTROL_OPERATORS, CONTROL_OPERATORS))
-    for index, token in enumerate(to_parse):
-        if token not in control_operator_lookup:
-            command_tokens.append(token)
-            continue
+        if not (string or hasattr(string, 'isalpha')):
+            debug_section('Abort', 'Given command is not a string')
+            return chain
 
-        if is_script(command_tokens[0]):
-            # Abort entire chain if script is detected
-            chain = Chain()
-            break
+        tokens = tokenize(string)
+        debug_section('Tokens', tokens)
+        if not is_command(string, tokens):
+            debug_section('Abort', 'Given string was not a command')
+            return chain
 
-        command = Command(command_tokens)
-        chain.append(command, chained_by=chained_by)
-        chained_by = token
+        chained_by = None
         command_tokens = []
+        to_parse = tokens + [';']
+        for index, token in enumerate(to_parse):
+            if token not in CONTROL_OPERATOR_LOOKUP:
+                command_tokens.append(token)
+                continue
+
+            if is_script(command_tokens[0]):
+                # Abort entire chain if script is detected
+                chain = Chain()
+                debug_section('Abort', 'Script detected')
+                break
+
+            command = Command(command_tokens)
+            chain.append(command, chained_by=chained_by)
+            debug_section('Command chained (%s)' % chained_by, command)
+            chained_by = token
+            command_tokens = []
+    except Exception as e:
+        debug_section('Exception thrown', e)
+        raise
     return chain
