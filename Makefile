@@ -4,7 +4,7 @@ all:
 	clean-pyc test
 
 test:
-	python tests.py
+	python tests/suite.py
 
 clean-pyc:
 	echo 'Cleaning .pyc files'

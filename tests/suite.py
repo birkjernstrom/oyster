@@ -6,7 +6,7 @@ import sys
 import unittest
 
 test_directory = os.path.dirname(os.path.abspath(__file__))
-test_directory = os.path.join(test_directory, 'src')
+test_directory = os.path.join(test_directory, '../src')
 sys.path.insert(0, test_directory)
 
 import oyster
