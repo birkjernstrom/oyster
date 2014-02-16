@@ -37,7 +37,7 @@ import shlex
 from subprocess import list2cmdline
 
 __author__ = 'Birk Nilson <birk@tictail.com>'
-__copyright__ = "Copyright 2013, Birk Nilson"
+__copyright__ = 'Copyright 2013, Birk Nilson'
 __license__ = 'BSD'
 __version__ = '0.1.0'
 __all__ = [
