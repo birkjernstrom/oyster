@@ -57,7 +57,7 @@ __all__ = [
 #: Set of words which are reserved in the shell.
 #: See: http://bit.ly/1baSfhM#tag_02_04
 RESERVED_WORDS = frozenset([
-    '!', '{', '}', 'case',
+    '!', ';', '{', '}', 'case',
     'do', 'done', 'elif', 'else',
     'esac', 'fi', 'for', 'if',
     'in', 'then', 'until', 'while',
