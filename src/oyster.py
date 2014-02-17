@@ -21,16 +21,16 @@
 
         - Parse command substitutions
 
-    :copyright: (c) 2013 by Birk Nilson.
-    :license: BSD, see LICENSE for more details.
+    :copyright: (c) 2014 by Birk Nilson.
+    :license: MIT, see LICENSE for more details.
 """
 
 import shlex
 from subprocess import list2cmdline
 
 __author__ = 'Birk Nilson <birk@tictail.com>'
-__copyright__ = 'Copyright 2013, Birk Nilson'
-__license__ = 'BSD'
+__copyright__ = 'Copyright 2014, Birk Nilson'
+__license__ = 'MIT'
 __version__ = '0.1.0'
 __all__ = [
     # Constants
