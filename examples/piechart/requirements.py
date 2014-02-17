@@ -1,0 +1,9 @@
+Flask==0.10.1
+Jinja2==2.7.2
+MarkupSafe==0.18
+Werkzeug==0.9.4
+distribute==0.6.31
+itsdangerous==0.23
+lxml==3.3.1
+pygal==1.3.1
+wsgiref==0.1.2
