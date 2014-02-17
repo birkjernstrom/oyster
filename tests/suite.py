@@ -367,5 +367,18 @@ class TestAPI(unittest.TestCase):
         self.assertTrue(not invalid_command)
 
 
+if oyster.DEBUG:
+    class TestUserCommands(unittest.TestCase):
+        def test_bash_history(self):
+            with open(os.path.expanduser('~/.bash_history')) as f:
+                for line in f.readlines():
+                    try:
+                        oyster.parse(line)
+                    except Exception as e:
+                        response = raw_input('Continue? [Y/n] ')
+                        if response.lower() != 'y':
+                            raise
+
+
 if __name__ == '__main__':
     unittest.main()
