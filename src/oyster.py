@@ -49,7 +49,7 @@ __all__ = [
 #:     * 0 turns of debugging
 #:     * 1 adds basic parse debugging
 #:     * 2 adds tokenize debugging
-DEBUG = 1
+DEBUG = 0
 
 #: Set of words which are reserved in the shell.
 #: See: http://bit.ly/1baSfhM#tag_02_04
