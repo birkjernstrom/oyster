@@ -30,6 +30,7 @@ nosetests.xml
 *.mo
 
 # Mr Developer
+.DS_Store
 .mr.developer.cfg
 .project
 .pydevproject
