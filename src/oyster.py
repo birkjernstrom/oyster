@@ -21,14 +21,6 @@
 
         - Parse command substitutions
 
-    *Features which may be included in upcoming releases:*
-
-        - Support for parsing scripted commands
-
-        - Command execution simulation: Iterate through the command chain
-          depending on the given, simulated, exit code and/or output
-          of the current command within the iteration.
-
     :copyright: (c) 2013 by Birk Nilson.
     :license: BSD, see LICENSE for more details.
 """
